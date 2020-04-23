@@ -29,7 +29,6 @@ export const DEFAULT_SETTINGS: _.Dictionary<any> = {
 	errorReporting: true,
 	unmountOnSuccess: true,
 	validateWriteOnSuccess: true,
-	trim: false,
 	updatesEnabled:
 		packageJSON.updates.enabled &&
 		!_.includes(['rpm', 'deb'], packageJSON.packageType),

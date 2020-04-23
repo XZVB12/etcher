@@ -166,7 +166,6 @@ export function performWrite(
 			flashInstanceUuid: flashState.getFlashUuid(),
 			unmountOnSuccess: settings.get('unmountOnSuccess'),
 			validateWriteOnSuccess: settings.get('validateWriteOnSuccess'),
-			trim: settings.get('trim'),
 		};
 
 		ipc.server.on('fail', ({ error }) => {
@@ -192,7 +191,7 @@ export function performWrite(
 				imagePath: image,
 				destinations: drives,
 				validateWriteOnSuccess: settings.get('validateWriteOnSuccess'),
-				trim: settings.get('trim'),
+				trim: true,
 				unmountOnSuccess: settings.get('unmountOnSuccess'),
 			});
 		});
@@ -268,7 +267,6 @@ export async function flash(
 		flashInstanceUuid: flashState.getFlashUuid(),
 		unmountOnSuccess: settings.get('unmountOnSuccess'),
 		validateWriteOnSuccess: settings.get('validateWriteOnSuccess'),
-		trim: settings.get('trim'),
 		applicationSessionUuid: store.getState().toJS().applicationSessionUuid,
 		flashingWorkflowUuid: store.getState().toJS().flashingWorkflowUuid,
 	};
@@ -330,7 +328,6 @@ export function cancel() {
 		flashInstanceUuid: flashState.getFlashUuid(),
 		unmountOnSuccess: settings.get('unmountOnSuccess'),
 		validateWriteOnSuccess: settings.get('validateWriteOnSuccess'),
-		trim: settings.get('trim'),
 		applicationSessionUuid: store.getState().toJS().applicationSessionUuid,
 		flashingWorkflowUuid: store.getState().toJS().flashingWorkflowUuid,
 		status: 'cancel',
