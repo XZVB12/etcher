@@ -5430,9 +5430,9 @@
       "integrity": "sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g=="
     },
     "etcher-sdk": {
-      "version": "4.0.0-decompress-first-3ccb131a299907fcfa642c76b1068f0f94bed2ac",
-      "resolved": "https://registry.npmjs.org/etcher-sdk/-/etcher-sdk-4.0.0-decompress-first-3ccb131a299907fcfa642c76b1068f0f94bed2ac.tgz",
-      "integrity": "sha512-J9Nd495sjU8HFuiYiVui7oKtL8QMo5M530UQdz0pTgAG0mVZRqE7dV+WldYTjN/Z3qE2uYCr8k3cKUSB/jK3Xg==",
+      "version": "4.0.0-decompress-first-37c14fa6c2ca418a8d3e1b0df71e15f5eec605e3",
+      "resolved": "https://registry.npmjs.org/etcher-sdk/-/etcher-sdk-4.0.0-decompress-first-37c14fa6c2ca418a8d3e1b0df71e15f5eec605e3.tgz",
+      "integrity": "sha512-vOmSR/rJFxOIxd+HuRkYB9w+CYFQiIcRKNL8Br39xiaYQRA/40H67ZbG4nJGRZpD5U6dJ1aGbPBWpKP3i+Eydg==",
       "requires": {
         "@ronomon/direct-io": "^3.0.1",
         "axios": "^0.19.2",

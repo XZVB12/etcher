@@ -61,7 +61,7 @@
     "d3": "^4.13.0",
     "debug": "^3.1.0",
     "electron-updater": "4.0.6",
-    "etcher-sdk": "^4.0.0-decompress-first-3ccb131a299907fcfa642c76b1068f0f94bed2ac",
+    "etcher-sdk": "^4.0.0-decompress-first-37c14fa6c2ca418a8d3e1b0df71e15f5eec605e3",
     "flexboxgrid": "^6.3.0",
     "immutable": "^3.8.1",
     "inactivity-timer": "^1.0.0",

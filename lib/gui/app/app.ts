@@ -95,22 +95,28 @@ observe(() => {
 	}
 
 	const currentFlashState = flashState.getFlashState();
-	const stateType =
-		!currentFlashState.flashing && currentFlashState.verifying
-			? `Verifying ${currentFlashState.verifying}`
-			: `Flashing ${currentFlashState.flashing}`;
+	let eta = '';
+	if (currentFlashState.eta !== undefined) {
+		eta = `eta in ${currentFlashState.eta.toFixed(0)}s`;
+	}
 
 	// NOTE: There is usually a short time period between the `isFlashing()`
 	// property being set, and the flashing actually starting, which
 	// might cause some non-sense flashing state logs including
 	// `undefined` values.
-	analytics.logDebug(
-		`${stateType} devices, ` +
-			`${currentFlashState.percentage}% at ${currentFlashState.speed} MB/s ` +
-			`(total ${currentFlashState.totalSpeed} MB/s) ` +
-			`eta in ${currentFlashState.eta}s ` +
-			`with ${currentFlashState.failed} failed devices`,
-	);
+	analytics.logDebug(outdent({ newline: ' ' })`
+		${_.capitalize(currentFlashState.type)} ${currentFlashState.active} device${
+		currentFlashState.active === 1 ? '' : 's'
+	},
+		${currentFlashState.percentage}% at ${(currentFlashState.speed || 0).toFixed(
+		2,
+	)} MB/s
+		(total ${(currentFlashState.speed * currentFlashState.active).toFixed(2)} MB/s)
+		${eta}
+		with ${currentFlashState.failed} failed device${
+		currentFlashState.failed === 1 ? '' : 's'
+	}
+	`);
 
 	windowProgress.set(currentFlashState);
 });

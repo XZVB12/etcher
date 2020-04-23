@@ -106,14 +106,14 @@ async function writeAndValidate(
 	const {
 		failures,
 		bytesWritten,
-	} = await sdk.multiWrite.pipeSourceToDestinations(
-		innerSource,
+	} = await sdk.multiWrite.pipeSourceToDestinations({
+		source: innerSource,
 		destinations,
 		onFail,
 		onProgress,
 		verify,
-		32,
-	);
+		numBuffers: 32,
+	});
 	const result: WriteResult = {
 		bytesWritten,
 		devices: {

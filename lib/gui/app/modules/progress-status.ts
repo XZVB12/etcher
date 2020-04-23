@@ -18,13 +18,12 @@ import { bytesToClosestUnit } from '../../../shared/units';
 import * as settings from '../models/settings';
 
 export interface FlashState {
-	flashing: number;
-	verifying: number;
-	successful: number;
+	active: number;
 	failed: number;
 	percentage?: number;
 	speed: number;
 	position: number;
+	type: 'flashing' | 'verifying';
 }
 
 /**
@@ -36,20 +35,19 @@ export interface FlashState {
  *
  * @example
  * const status = progressStatus.fromFlashState({
- *   flashing: 1,
- *   verifying: 0,
- *   successful: 0,
+ *   type: 'flashing'
+ *   active: 1,
  *   failed: 0,
  *   percentage: 55,
- *   speed: 2049
+ *   speed: 2049,
  * })
  *
  * console.log(status)
  * // '55% Flashing'
  */
 export function fromFlashState(state: FlashState): string {
-	const isFlashing = Boolean(state.flashing);
-	const isValidating = !isFlashing && Boolean(state.verifying);
+	const isFlashing = state.type === 'flashing';
+	const isValidating = state.type === 'verifying';
 	const shouldValidate = settings.get('validateWriteOnSuccess');
 	const shouldUnmount = settings.get('unmountOnSuccess');
 
@@ -72,9 +70,7 @@ export function fromFlashState(state: FlashState): string {
 		return `${bytesToClosestUnit(state.position)} flashed`;
 	} else if (isValidating) {
 		return `${state.percentage}% Validating`;
-	} else if (!isFlashing && !isValidating) {
+	} else {
 		return 'Failed';
 	}
-
-	throw new Error(`Invalid state: ${JSON.stringify(state)}`);
 }
