@@ -95,24 +95,15 @@ async function writeAndValidate(
 	onProgress: sdk.multiWrite.OnProgressFunction,
 	onFail: sdk.multiWrite.OnFailFunction,
 ): Promise<WriteResult> {
-	let innerSource: sdk.sourceDestination.SourceDestination = await source.getInnerSource();
-	if (trim && (await innerSource.canRead())) {
-		innerSource = new sdk.sourceDestination.ConfiguredSource({
-			source: innerSource,
-			shouldTrimPartitions: trim,
-			createStreamFromDisk: true,
-		});
-	}
-	const {
-		failures,
-		bytesWritten,
-	} = await sdk.multiWrite.pipeSourceToDestinations({
-		source: innerSource,
+	const { failures, bytesWritten } = await sdk.multiWrite.decompressThenFlash({
+		source,
 		destinations,
 		onFail,
 		onProgress,
 		verify,
+		trim,
 		numBuffers: 32,
+		decompressFirst: true,
 	});
 	const result: WriteResult = {
 		bytesWritten,

@@ -87,7 +87,7 @@ describe('Browser: WindowProgress', function() {
 					this.state.percentage = 0;
 					this.state.speed = 0;
 					windowProgress.set(this.state);
-					assert.calledWith(this.setTitleSpy, ' – Starting...');
+					assert.calledWith(this.setTitleSpy, ' – 0% Flashing');
 				});
 
 				it('should set the finishing title', function() {

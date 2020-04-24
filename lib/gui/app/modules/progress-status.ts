@@ -15,7 +15,7 @@
  */
 
 import { bytesToClosestUnit } from '../../../shared/units';
-import * as settings from '../models/settings';
+// import * as settings from '../models/settings';
 
 export interface FlashState {
 	active: number;
@@ -23,7 +23,7 @@ export interface FlashState {
 	percentage?: number;
 	speed: number;
 	position: number;
-	type: 'flashing' | 'verifying';
+	type?: 'decompressing' | 'flashing' | 'verifying';
 }
 
 /**
@@ -45,32 +45,37 @@ export interface FlashState {
  * console.log(status)
  * // '55% Flashing'
  */
-export function fromFlashState(state: FlashState): string {
-	const isFlashing = state.type === 'flashing';
-	const isValidating = state.type === 'verifying';
-	const shouldValidate = settings.get('validateWriteOnSuccess');
-	const shouldUnmount = settings.get('unmountOnSuccess');
-
-	if (state.percentage === 0 && !state.speed) {
-		if (isValidating) {
-			return 'Validating...';
-		}
-
+export function fromFlashState({
+	type,
+	percentage,
+	position,
+}: FlashState): string {
+	if (type === undefined) {
 		return 'Starting...';
-	} else if (state.percentage === 100) {
-		if ((isValidating || !shouldValidate) && shouldUnmount) {
-			return 'Unmounting...';
+	} else if (type === 'decompressing') {
+		if (percentage == null) {
+			return 'Decompressing...';
+		} else {
+			return `${percentage}% Decompressing`;
 		}
-
-		return 'Finishing...';
-	} else if (isFlashing) {
-		if (state.percentage != null) {
-			return `${state.percentage}% Flashing`;
+	} else if (type === 'flashing') {
+		if (percentage != null) {
+			if (percentage < 100) {
+				return `${percentage}% Flashing`;
+			} else {
+				return 'Finishing...';
+			}
+		} else {
+			return `${bytesToClosestUnit(position)} flashed`;
 		}
-		return `${bytesToClosestUnit(state.position)} flashed`;
-	} else if (isValidating) {
-		return `${state.percentage}% Validating`;
-	} else {
-		return 'Failed';
+	} else if (type === 'verifying') {
+		if (percentage == null) {
+			return 'Validating...';
+		} else if (percentage < 100) {
+			return `${percentage}% Validating`;
+		} else {
+			return 'Finishing...';
+		}
 	}
+	return 'Failed';
 }

@@ -41,20 +41,20 @@ describe('Browser: progressStatus', function() {
 
 		it('should handle percentage == 0, flashing, unmountOnSuccess', function() {
 			this.state.speed = 0;
-			expect(progressStatus.fromFlashState(this.state)).to.equal('Starting...');
+			expect(progressStatus.fromFlashState(this.state)).to.equal('0% Flashing');
 		});
 
 		it('should handle percentage == 0, flashing, !unmountOnSuccess', function() {
 			this.state.speed = 0;
 			settings.set('unmountOnSuccess', false);
-			expect(progressStatus.fromFlashState(this.state)).to.equal('Starting...');
+			expect(progressStatus.fromFlashState(this.state)).to.equal('0% Flashing');
 		});
 
 		it('should handle percentage == 0, verifying, unmountOnSuccess', function() {
 			this.state.speed = 0;
 			this.state.type = 'verifying';
 			expect(progressStatus.fromFlashState(this.state)).to.equal(
-				'Validating...',
+				'0% Validating',
 			);
 		});
 
@@ -63,7 +63,7 @@ describe('Browser: progressStatus', function() {
 			this.state.type = 'verifying';
 			settings.set('unmountOnSuccess', false);
 			expect(progressStatus.fromFlashState(this.state)).to.equal(
-				'Validating...',
+				'0% Validating',
 			);
 		});
 
@@ -110,7 +110,7 @@ describe('Browser: progressStatus', function() {
 			this.state.percentage = 100;
 			settings.set('validateWriteOnSuccess', false);
 			expect(progressStatus.fromFlashState(this.state)).to.equal(
-				'Unmounting...',
+				'Finishing...',
 			);
 		});
 
@@ -127,7 +127,7 @@ describe('Browser: progressStatus', function() {
 			this.state.percentage = 100;
 			this.state.type = 'verifying';
 			expect(progressStatus.fromFlashState(this.state)).to.equal(
-				'Unmounting...',
+				'Finishing...',
 			);
 		});
 

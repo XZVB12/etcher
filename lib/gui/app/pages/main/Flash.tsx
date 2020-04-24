@@ -32,6 +32,7 @@ import { scanner as driveScanner } from '../../modules/drive-scanner';
 import * as imageWriter from '../../modules/image-writer';
 import * as progressStatus from '../../modules/progress-status';
 import * as notification from '../../os/notification';
+import { StepSelection } from '../../styled-components';
 
 const COMPLETED_PERCENTAGE = 100;
 const SPEED_PRECISION = 2;
@@ -229,14 +230,16 @@ export const Flash = ({ shouldFlashStepBeDisabled, goToSuccess }: any) => {
 				</div>
 
 				<div className="space-vertical-large">
-					<ProgressButton
-						striped={state.type === 'verifying'}
-						active={isFlashing}
-						percentage={state.percentage}
-						label={getProgressButtonLabel()}
-						disabled={Boolean(flashErrorCode) || shouldFlashStepBeDisabled}
-						callback={tryFlash}
-					></ProgressButton>
+					<StepSelection>
+						<ProgressButton
+							type={state.type}
+							active={isFlashing}
+							percentage={state.percentage}
+							label={getProgressButtonLabel()}
+							disabled={Boolean(flashErrorCode) || shouldFlashStepBeDisabled}
+							callback={tryFlash}
+						/>
+					</StepSelection>
 
 					{isFlashing && (
 						<button
