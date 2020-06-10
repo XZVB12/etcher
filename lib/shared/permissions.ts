@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import bindings = require('bindings');
 import * as Bluebird from 'bluebird';
 import * as childProcess from 'child_process';
 import { promises as fs } from 'fs';
@@ -30,7 +29,10 @@ import { tmpFileDisposer } from './utils';
 
 const execAsync = promisify(childProcess.exec);
 const execFileAsync = promisify(childProcess.execFile);
-const sudoExecAsync = promisify(sudoPrompt.exec);
+// sudo-prompt's exec callback is function(error, stdout, stderr) so we need multiArgs
+const sudoExecAsync = Bluebird.promisify(sudoPrompt.exec, {
+	multiArgs: true,
+}) as (cmd: string, options: any) => Bluebird<[string, string]>;
 
 /**
  * @summary The user id of the UNIX "superuser"
@@ -109,7 +111,9 @@ async function elevateScriptWindows(
 ): Promise<{ cancelled: boolean }> {
 	// 'elevator' imported here as it only exists on windows
 	// TODO: replace this with sudo-prompt once https://github.com/jorangreef/sudo-prompt/issues/96 is fixed
-	const elevateAsync = promisify(bindings('elevator').elevate);
+	// @ts-ignore this is a native module
+	const { elevate } = await import('../../build/Release/elevator.node');
+	const elevateAsync = promisify(elevate);
 
 	// '&' needs to be escaped here (but not when written to a .cmd file)
 	const cmd = ['cmd', '/c', escapeParamCmd(path).replace(/&/g, '^&')];
@@ -122,10 +126,7 @@ async function elevateScriptUnix(
 	name: string,
 ): Promise<{ cancelled: boolean }> {
 	const cmd = ['bash', escapeSh(path)].join(' ');
-	const [, stderr] = await sudoExecAsync(cmd, { name });
-	if (!_.isEmpty(stderr)) {
-		throw errors.createError({ title: stderr });
-	}
+	await sudoExecAsync(cmd, { name });
 	return { cancelled: false };
 }
 

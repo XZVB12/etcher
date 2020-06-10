@@ -44,11 +44,12 @@ export const colors = {
 	},
 	primary: {
 		foreground: '#fff',
-		background: '#2297de',
+		background: '#00aeef',
 	},
 	secondary: {
 		foreground: '#000',
 		background: '#ddd',
+		main: '#fff',
 	},
 	warning: {
 		foreground: '#fff',

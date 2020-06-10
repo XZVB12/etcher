@@ -3,6 +3,142 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+# v1.5.98
+## (2020-06-10)
+
+* Use between 2 and 256MiB for buffering depending on the number of drives [Alexis Svinartchouk]
+* Check that argument is an url or a regular file before opening [Alexis Svinartchouk]
+* Update etcher-sdk to ^4.1.13 [Alexis Svinartchouk]
+
+# v1.5.97
+## (2020-06-08)
+
+* Update electron to v9.0.2 [Alexis Svinartchouk]
+* Fix flash from url on windows [Alexis Svinartchouk]
+* Avoid random access in http sources [Alexis Svinartchouk]
+* Update etcher-sdk to ^4.1.8 [Alexis Svinartchouk]
+* Read image path from arguments, register `etcher://...` protocol [Alexis Svinartchouk]
+* Update etcher-sdk to ^4.1.6 [Alexis Svinartchouk]
+* Fix sudo-prompt promisification [Alexis Svinartchouk]
+* Allow skipping notarization when building package (dev) [Lorenzo Alberto Maria Ambrosi]
+
+# v1.5.96
+## (2020-06-03)
+
+* Fix ia32 builds for windows [Alexis Svinartchouk]
+* Remove writing speed from finish screen [Alexis Svinartchouk]
+* Add effective speed in flash results [Alexis Svinartchouk]
+* Update progress bar style [Alexis Svinartchouk]
+* Change font to SourceSansPro and fix hover color [Alexis Svinartchouk]
+* Update rendition to ^14.13.0 [Alexis Svinartchouk]
+* Remove unused styles [Alexis Svinartchouk]
+
+# v1.5.95
+## (2020-06-01)
+
+* spectron: Make tests pass on Windows Docker containers [Juan Cruz Viotti]
+
+# v1.5.94
+## (2020-05-27)
+
+* Stop checking file extensions [Alexis Svinartchouk]
+* Fix flash from url (broken in 1.5.92) [Alexis Svinartchouk]
+* Update etcher-sdk to ^4.1.4 [Alexis Svinartchouk]
+
+# v1.5.93
+## (2020-05-25)
+
+* Update electron-builder to v22.6.1 [Alexis Svinartchouk]
+* Strip out comments from generated code [Alexis Svinartchouk]
+* Update electron to v9.0.0 [Alexis Svinartchouk]
+
+# v1.5.92
+## (2020-05-22)
+
+* Use electron.app.getAppPath() instead of reading it from argv in catalina-sudo [Alexis Svinartchouk]
+* Disable asar packing on all platforms [Alexis Svinartchouk]
+* Remove unneeded fortawesome from main.scss [Alexis Svinartchouk]
+* Remove unneeded font formats [Alexis Svinartchouk]
+* Webpack everything, reduce package size [Alexis Svinartchouk]
+
+# v1.5.91
+## (2020-05-21)
+
+* Minor fix - Init isSourceDrive param in correct place [Lorenzo Alberto Maria Ambrosi]
+* Fix undefined image from DriveCompatibilityWarning [Rob Evans]
+
+# v1.5.90
+## (2020-05-20)
+
+* Update leds behaviour [Alexis Svinartchouk]
+
+# v1.5.89
+## (2020-05-13)
+
+* Fix drive selector modal padding [Alexis Svinartchouk]
+* Update all dependencies minor versions [Alexis Svinartchouk]
+* Update @types/node 12.12.24 -> 12.12.39 [Alexis Svinartchouk]
+* Update ts-loader 6 -> 7 [Alexis Svinartchouk]
+* Update sinon 8 -> 9 [Alexis Svinartchouk]
+* Update node-gyp 3 -> 6 [Alexis Svinartchouk]
+* Update lint-staged 9 -> 10 [Alexis Svinartchouk]
+* Update husky 3 -> 4 [Alexis Svinartchouk]
+* Remove no longer used html-loader dev dependency [Alexis Svinartchouk]
+* Update electron-notarize 0.1.1 -> 0.3.0 [Alexis Svinartchouk]
+* Remove no longer used chalk dev dependency [Alexis Svinartchouk]
+* Update @types/tmp 0.1.0 -> 0.2.0 [Alexis Svinartchouk]
+* Update @types/sinon 7 -> 9 [Alexis Svinartchouk]
+* Update @types/semver 6 -> 7 [Alexis Svinartchouk]
+* Update @types/mocha 5 -> 7 [Alexis Svinartchouk]
+
+# v1.5.88
+## (2020-05-12)
+
+* Update roboto-fontface 0.9.0 -> 0.10.0 [Alexis Svinartchouk]
+* Update rendition 12 -> 14, styled-system and styled-components 4 -> 5 [Alexis Svinartchouk]
+* Update electron-updater 4.0.6 -> 4.3.1 [Alexis Svinartchouk]
+* Update redux 3 -> 4 [Alexis Svinartchouk]
+* Update debug 3 -> 4 [Alexis Svinartchouk]
+* Update semver 5 -> 7 [Alexis Svinartchouk]
+* Update tmp 0.1.0 -> 0.2.1 [Alexis Svinartchouk]
+* Update uuid v3 -> v8 [Alexis Svinartchouk]
+
+# v1.5.87
+## (2020-05-12)
+
+* Update etcher-sdk to ^4.1.3 to fix issues with some bz2 files [Alexis Svinartchouk]
+
+# v1.5.86
+## (2020-05-06)
+
+* Fix theme warnings [Alexis Svinartchouk]
+
+# v1.5.85
+## (2020-05-05)
+
+* Prefer balena-etcher to etcher-bin on Arch Linux [Alexis Svinartchouk]
+
+# v1.5.84
+## (2020-05-04)
+
+* Including Arch / Manjaro install instructions [Tom]
+* Fix notification icon path [Alexis Svinartchouk]
+
+# v1.5.83
+## (2020-04-30)
+
+* Decompress images before flashing, remove trim setting, trim ext partitions [Alexis Svinartchouk]
+
+# v1.5.82
+## (2020-04-24)
+
+* Allow http/https only for Flash from URL [Lorenzo Alberto Maria Ambrosi]
+* Add generic error's message [Lorenzo Alberto Maria Ambrosi]
+* Refactor buttons style [Lorenzo Alberto Maria Ambrosi]
+* Add flash from url workflow [Lorenzo Alberto Maria Ambrosi]
+* Add staging percentage for v1.5.81 [Lorenzo Alberto Maria Ambrosi]
+* Trigger update for v1.5.81 [Lorenzo Alberto Maria Ambrosi]
+
 # v1.5.81
 ## (2020-04-14)
 

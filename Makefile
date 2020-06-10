@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------
 
 RESIN_SCRIPTS ?= ./scripts/resin
-export NPM_VERSION ?= 6.7.0
+export NPM_VERSION ?= 6.14.5
 S3_BUCKET = artifacts.ci.balena-cloud.com
 
 # This directory will be completely deleted by the `clean` rule
@@ -144,12 +144,8 @@ webpack:
 
 .PHONY: $(TARGETS)
 
-sass:
-	npm rebuild node-sass
-	node-sass lib/gui/app/scss/main.scss > lib/gui/css/main.css
-
 lint-ts:
-	resin-lint --fix --typescript typings lib tests scripts/clean-shrinkwrap.ts webpack.config.ts
+	balena-lint --fix --typescript typings lib tests scripts/clean-shrinkwrap.ts webpack.config.ts
 
 lint-sass:
 	sass-lint -v lib/gui/app/scss/**/*.scss lib/gui/app/scss/*.scss
@@ -166,12 +162,10 @@ lint-spell:
 
 lint: lint-ts lint-sass lint-cpp lint-spell
 
-MOCHA_OPTIONS=--recursive --reporter spec --require ts-node/register
+MOCHA_OPTIONS=--recursive --reporter spec --require ts-node/register --require-main "tests/gui/allow-renderer-process-reuse.ts"
 
-# See https://github.com/electron/spectron/issues/127
-ETCHER_SPECTRON_ENTRYPOINT ?= $(shell node -e 'console.log(require("electron"))')
 test-spectron:
-	ETCHER_SPECTRON_ENTRYPOINT="$(ETCHER_SPECTRON_ENTRYPOINT)" mocha $(MOCHA_OPTIONS) tests/spectron/runner.spec.ts
+	mocha $(MOCHA_OPTIONS) tests/spectron/runner.spec.ts
 
 test-gui:
 	electron-mocha $(MOCHA_OPTIONS) --full-trace --no-sandbox --renderer tests/gui/**/*.ts
@@ -190,7 +184,6 @@ info:
 	@echo "Target arch         : $(TARGET_ARCH)"
 
 sanity-checks:
-	./scripts/ci/ensure-staged-sass.sh
 	./scripts/ci/ensure-all-file-extensions-in-gitattributes.sh
 
 clean:

@@ -16,54 +16,39 @@
 
 import * as _ from 'lodash';
 import * as React from 'react';
-import * as uuidV4 from 'uuid/v4';
+import { v4 as uuidV4 } from 'uuid';
 
 import * as flashState from '../../models/flash-state';
 import * as selectionState from '../../models/selection-state';
-import { store } from '../../models/store';
+import { Actions, store } from '../../models/store';
 import * as analytics from '../../modules/analytics';
-import { updateLock } from '../../modules/update-lock';
 import { open as openExternal } from '../../os/open-external/services/open-external';
 import { FlashAnother } from '../flash-another/flash-another';
 import { FlashResults } from '../flash-results/flash-results';
 import { SVGIcon } from '../svg-icon/svg-icon';
 
-const restart = (options: any, goToMain: () => void) => {
-	const {
-		applicationSessionUuid,
-		flashingWorkflowUuid,
-	} = store.getState().toJS();
-	if (!options.preserveImage) {
-		selectionState.deselectImage();
-	}
+function restart(goToMain: () => void) {
 	selectionState.deselectAllDrives();
-	analytics.logEvent('Restart', {
-		...options,
-		applicationSessionUuid,
-		flashingWorkflowUuid,
-	});
-
-	// Re-enable lock release on inactivity
-	updateLock.resume();
+	analytics.logEvent('Restart');
 
 	// Reset the flashing workflow uuid
 	store.dispatch({
-		type: 'SET_FLASHING_WORKFLOW_UUID',
+		type: Actions.SET_FLASHING_WORKFLOW_UUID,
 		data: uuidV4(),
 	});
 
 	goToMain();
-};
+}
 
-const formattedErrors = () => {
+function formattedErrors() {
 	const errors = _.map(
 		_.get(flashState.getFlashResults(), ['results', 'errors']),
-		error => {
+		(error) => {
 			return `${error.device}: ${error.message || error.code}`;
 		},
 	);
 	return errors.join('\n');
-};
+}
 
 function FinishPage({ goToMain }: { goToMain: () => void }) {
 	const results = flashState.getFlashResults().results || {};
@@ -74,13 +59,15 @@ function FinishPage({ goToMain }: { goToMain: () => void }) {
 					<FlashResults results={results} errors={formattedErrors()} />
 
 					<FlashAnother
-						onClick={(options: any) => restart(options, goToMain)}
-					></FlashAnother>
+						onClick={() => {
+							restart(goToMain);
+						}}
+					/>
 				</div>
 
 				<div className="box center">
 					<div className="fallback-banner">
-						<div className="caption caption-big">
+						<div className="caption-big">
 							Thanks for using
 							<span
 								style={{ cursor: 'pointer' }}
@@ -91,16 +78,16 @@ function FinishPage({ goToMain }: { goToMain: () => void }) {
 								}
 							>
 								<SVGIcon
-									paths={['../../assets/etcher.svg']}
+									paths={['etcher.svg']}
 									width="165px"
 									height="auto"
 								></SVGIcon>
 							</span>
 						</div>
-						<div className="caption caption-small fallback-footer">
+						<div className="caption-small fallback-footer">
 							made with
 							<SVGIcon
-								paths={['../../assets/love.svg']}
+								paths={['love.svg']}
 								width="auto"
 								height="20px"
 							></SVGIcon>
@@ -112,7 +99,7 @@ function FinishPage({ goToMain }: { goToMain: () => void }) {
 								}
 							>
 								<SVGIcon
-									paths={['../../assets/balena.svg']}
+									paths={['balena.svg']}
 									width="auto"
 									height="20px"
 								></SVGIcon>

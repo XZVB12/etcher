@@ -17,11 +17,14 @@
 import { delay } from 'bluebird';
 import { Drive as DrivelistDrive } from 'drivelist';
 import * as sdk from 'etcher-sdk';
+import { cleanupTmpFiles } from 'etcher-sdk/build/tmp';
 import * as _ from 'lodash';
 import * as ipc from 'node-ipc';
 
+import { File, Http } from 'etcher-sdk/build/source-destination';
 import { toJSON } from '../../shared/errors';
 import { GENERAL_ERROR, SUCCESS } from '../../shared/exit-codes';
+import { SourceOptions } from '../app/components/source-selector/source-selector';
 
 ipc.config.id = process.env.IPC_CLIENT_ID as string;
 ipc.config.socketRoot = process.env.IPC_SOCKET_ROOT as string;
@@ -75,6 +78,7 @@ interface WriteResult {
 		successful: number;
 	};
 	errors: Array<Error & { device: string }>;
+	sourceMetadata: sdk.sourceDestination.Metadata;
 }
 
 /**
@@ -82,38 +86,42 @@ interface WriteResult {
  * @param {SourceDestination} source - source
  * @param {SourceDestination[]} destinations - destinations
  * @param {Boolean} verify - whether to validate the writes or not
- * @param {Boolean} trim - whether to trim ext partitions before writing
+ * @param {Boolean} autoBlockmapping - whether to trim ext partitions before writing
  * @param {Function} onProgress - function to call on progress
  * @param {Function} onFail - function to call on fail
  * @returns {Promise<{ bytesWritten, devices, errors} >}
  */
-async function writeAndValidate(
-	source: sdk.sourceDestination.SourceDestination,
-	destinations: sdk.sourceDestination.BlockDevice[],
-	verify: boolean,
-	trim: boolean,
-	onProgress: sdk.multiWrite.OnProgressFunction,
-	onFail: sdk.multiWrite.OnFailFunction,
-): Promise<WriteResult> {
-	let innerSource: sdk.sourceDestination.SourceDestination = await source.getInnerSource();
-	if (trim && (await innerSource.canRead())) {
-		innerSource = new sdk.sourceDestination.ConfiguredSource({
-			source: innerSource,
-			shouldTrimPartitions: trim,
-			createStreamFromDisk: true,
-		});
-	}
+async function writeAndValidate({
+	source,
+	destinations,
+	verify,
+	autoBlockmapping,
+	decompressFirst,
+	onProgress,
+	onFail,
+}: {
+	source: sdk.sourceDestination.SourceDestination;
+	destinations: sdk.sourceDestination.BlockDevice[];
+	verify: boolean;
+	autoBlockmapping: boolean;
+	decompressFirst: boolean;
+	onProgress: sdk.multiWrite.OnProgressFunction;
+	onFail: sdk.multiWrite.OnFailFunction;
+}): Promise<WriteResult> {
 	const {
+		sourceMetadata,
 		failures,
 		bytesWritten,
-	} = await sdk.multiWrite.pipeSourceToDestinations(
-		innerSource,
+	} = await sdk.multiWrite.decompressThenFlash({
+		source,
 		destinations,
 		onFail,
 		onProgress,
 		verify,
-		32,
-	);
+		trim: autoBlockmapping,
+		numBuffers: Math.min(2 + (destinations.length - 1) * 32, 256),
+		decompressFirst,
+	});
 	const result: WriteResult = {
 		bytesWritten,
 		devices: {
@@ -121,6 +129,7 @@ async function writeAndValidate(
 			successful: destinations.length - failures.size,
 		},
 		errors: [],
+		sourceMetadata,
 	};
 	for (const [destination, error] of failures) {
 		const err = error as Error & { device: string };
@@ -135,10 +144,15 @@ interface WriteOptions {
 	destinations: DrivelistDrive[];
 	unmountOnSuccess: boolean;
 	validateWriteOnSuccess: boolean;
-	trim: boolean;
+	autoBlockmapping: boolean;
+	decompressFirst: boolean;
+	source: SourceOptions;
+	SourceType: string;
 }
 
 ipc.connectTo(IPC_SERVER_ID, () => {
+	// Remove leftover tmp files older than 1 hour
+	cleanupTmpFiles(Date.now() - 60 * 60 * 1000);
 	process.once('uncaughtException', handleError);
 
 	// Gracefully exit on the following cases. If the parent
@@ -215,8 +229,9 @@ ipc.connectTo(IPC_SERVER_ID, () => {
 		log(`Devices: ${destinations.join(', ')}`);
 		log(`Umount on success: ${options.unmountOnSuccess}`);
 		log(`Validate on success: ${options.validateWriteOnSuccess}`);
-		log(`Trim: ${options.trim}`);
-		const dests = _.map(options.destinations, destination => {
+		log(`Auto blockmapping: ${options.autoBlockmapping}`);
+		log(`Decompress first: ${options.decompressFirst}`);
+		const dests = _.map(options.destinations, (destination) => {
 			return new sdk.sourceDestination.BlockDevice({
 				drive: destination,
 				unmountOnSuccess: options.unmountOnSuccess,
@@ -224,20 +239,27 @@ ipc.connectTo(IPC_SERVER_ID, () => {
 				direct: true,
 			});
 		});
-		const source = new sdk.sourceDestination.File({
-			path: options.imagePath,
-		});
+		const { SourceType } = options;
+		let source;
+		if (SourceType === File.name) {
+			source = new File({
+				path: options.imagePath,
+			});
+		} else {
+			source = new Http({ url: options.imagePath, avoidRandomAccess: true });
+		}
 		try {
-			const results = await writeAndValidate(
+			const results = await writeAndValidate({
 				source,
-				dests,
-				options.validateWriteOnSuccess,
-				options.trim,
+				destinations: dests,
+				verify: options.validateWriteOnSuccess,
+				autoBlockmapping: options.autoBlockmapping,
+				decompressFirst: options.decompressFirst,
 				onProgress,
 				onFail,
-			);
+			});
 			log(`Finish: ${results.bytesWritten}`);
-			results.errors = _.map(results.errors, error => {
+			results.errors = _.map(results.errors, (error) => {
 				return toJSON(error);
 			});
 			ipc.of[IPC_SERVER_ID].emit('done', { results });

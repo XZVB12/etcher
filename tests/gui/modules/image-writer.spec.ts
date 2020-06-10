@@ -16,6 +16,7 @@
 
 import { expect } from 'chai';
 import { Drive as DrivelistDrive } from 'drivelist';
+import { sourceDestination } from 'etcher-sdk';
 import * as _ from 'lodash';
 import * as ipc from 'node-ipc';
 import { assert, SinonStub, stub } from 'sinon';
@@ -28,6 +29,12 @@ const fakeDrive: DrivelistDrive = {};
 
 describe('Browser: imageWriter', () => {
 	describe('.flash()', () => {
+		const imagePath = 'foo.img';
+		const sourceOptions = {
+			imagePath,
+			SourceType: sourceDestination.File,
+		};
+
 		describe('given a successful write', () => {
 			let performWriteStub: SinonStub;
 
@@ -51,7 +58,7 @@ describe('Browser: imageWriter', () => {
 					sourceChecksum: '1234',
 				});
 
-				imageWriter.flash('foo.img', [fakeDrive]).finally(() => {
+				imageWriter.flash(imagePath, [fakeDrive], sourceOptions).finally(() => {
 					expect(flashState.isFlashing()).to.be.false;
 				});
 			});
@@ -62,20 +69,24 @@ describe('Browser: imageWriter', () => {
 					sourceChecksum: '1234',
 				});
 
-				const writing = imageWriter.flash('foo.img', [fakeDrive]);
-				imageWriter.flash('foo.img', [fakeDrive]).catch(_.noop);
+				const writing = imageWriter.flash(
+					imagePath,
+					[fakeDrive],
+					sourceOptions,
+				);
+				imageWriter.flash(imagePath, [fakeDrive], sourceOptions).catch(_.noop);
 				writing.finally(() => {
 					assert.calledOnce(performWriteStub);
 				});
 			});
 
 			it('should reject the second flash attempt', () => {
-				imageWriter.flash('foo.img', [fakeDrive]);
+				imageWriter.flash(imagePath, [fakeDrive], sourceOptions);
 
 				let rejectError: Error;
 				imageWriter
-					.flash('foo.img', [fakeDrive])
-					.catch(error => {
+					.flash(imagePath, [fakeDrive], sourceOptions)
+					.catch((error) => {
 						rejectError = error;
 					})
 					.finally(() => {
@@ -103,7 +114,7 @@ describe('Browser: imageWriter', () => {
 
 			it('should set flashing to false when done', () => {
 				imageWriter
-					.flash('foo.img', [fakeDrive])
+					.flash(imagePath, [fakeDrive], sourceOptions)
 					.catch(_.noop)
 					.finally(() => {
 						expect(flashState.isFlashing()).to.be.false;
@@ -112,7 +123,7 @@ describe('Browser: imageWriter', () => {
 
 			it('should set the error code in the flash results', () => {
 				imageWriter
-					.flash('foo.img', [fakeDrive])
+					.flash(imagePath, [fakeDrive], sourceOptions)
 					.catch(_.noop)
 					.finally(() => {
 						const flashResults = flashState.getFlashResults();
@@ -128,8 +139,8 @@ describe('Browser: imageWriter', () => {
 
 				let rejection: Error;
 				imageWriter
-					.flash('foo.img', [fakeDrive])
-					.catch(error => {
+					.flash(imagePath, [fakeDrive], sourceOptions)
+					.catch((error) => {
 						rejection = error;
 					})
 					.finally(() => {
@@ -140,8 +151,8 @@ describe('Browser: imageWriter', () => {
 		});
 	});
 
-	describe('.performWrite()', function() {
-		it('should set the ipc config to silent', function() {
+	describe('.performWrite()', function () {
+		it('should set the ipc config to silent', function () {
 			// Reset this value as it can persist from other tests
 			expect(ipc.config.silent).to.be.true;
 		});

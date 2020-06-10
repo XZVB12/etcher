@@ -74,7 +74,7 @@ export class SVGIcon extends React.Component<SVGIconProps> {
 		// that's the only way to get the "real" __dirname.
 		let baseDirectory: string;
 		if (path.isAbsolute(__dirname)) {
-			baseDirectory = path.join(__dirname, '..');
+			baseDirectory = path.join(__dirname);
 		} else {
 			// @ts-ignore
 			baseDirectory = global.__dirname;
@@ -82,7 +82,7 @@ export class SVGIcon extends React.Component<SVGIconProps> {
 
 		let svgData = '';
 
-		_.find(this.props.contents, content => {
+		_.find(this.props.contents, (content) => {
 			const attempt = tryParseSVGContents(content);
 
 			if (attempt) {
@@ -94,12 +94,12 @@ export class SVGIcon extends React.Component<SVGIconProps> {
 		});
 
 		if (!svgData) {
-			_.find(this.props.paths, relativePath => {
+			_.find(this.props.paths, (relativePath) => {
 				// This means the path to the icon should be
 				// relative to *this directory*.
 				// TODO: There might be a way to compute the path
 				// relatively to the `index.html`.
-				const imagePath = path.join(baseDirectory, 'assets', relativePath);
+				const imagePath = path.join(baseDirectory, 'media', relativePath);
 
 				const contents = _.attempt(() => {
 					return fs.readFileSync(imagePath, {

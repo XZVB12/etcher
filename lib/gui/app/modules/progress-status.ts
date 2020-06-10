@@ -15,66 +15,63 @@
  */
 
 import { bytesToClosestUnit } from '../../../shared/units';
-import * as settings from '../models/settings';
 
 export interface FlashState {
-	flashing: number;
-	verifying: number;
-	successful: number;
+	active: number;
 	failed: number;
 	percentage?: number;
 	speed: number;
 	position: number;
+	type?: 'decompressing' | 'flashing' | 'verifying';
 }
 
-/**
- * @summary Make the progress status subtitle string
- *
- * @param {Object} state - flashing metadata
- *
- * @returns {String}
- *
- * @example
- * const status = progressStatus.fromFlashState({
- *   flashing: 1,
- *   verifying: 0,
- *   successful: 0,
- *   failed: 0,
- *   percentage: 55,
- *   speed: 2049
- * })
- *
- * console.log(status)
- * // '55% Flashing'
- */
-export function fromFlashState(state: FlashState): string {
-	const isFlashing = Boolean(state.flashing);
-	const isValidating = !isFlashing && Boolean(state.verifying);
-	const shouldValidate = settings.get('validateWriteOnSuccess');
-	const shouldUnmount = settings.get('unmountOnSuccess');
-
-	if (state.percentage === 0 && !state.speed) {
-		if (isValidating) {
-			return 'Validating...';
+export function fromFlashState({
+	type,
+	percentage,
+	position,
+}: Pick<FlashState, 'type' | 'percentage' | 'position'>): {
+	status: string;
+	position?: string;
+} {
+	if (type === undefined) {
+		return { status: 'Starting...' };
+	} else if (type === 'decompressing') {
+		if (percentage == null) {
+			return { status: 'Decompressing...' };
+		} else {
+			return { position: `${percentage}%`, status: 'Decompressing...' };
 		}
-
-		return 'Starting...';
-	} else if (state.percentage === 100) {
-		if ((isValidating || !shouldValidate) && shouldUnmount) {
-			return 'Unmounting...';
+	} else if (type === 'flashing') {
+		if (percentage != null) {
+			if (percentage < 100) {
+				return { position: `${percentage}%`, status: 'Flashing...' };
+			} else {
+				return { status: 'Finishing...' };
+			}
+		} else {
+			return {
+				status: 'Flashing...',
+				position: `${bytesToClosestUnit(position)}`,
+			};
 		}
-
-		return 'Finishing...';
-	} else if (isFlashing) {
-		if (state.percentage != null) {
-			return `${state.percentage}% Flashing`;
+	} else if (type === 'verifying') {
+		if (percentage == null) {
+			return { status: 'Validating...' };
+		} else if (percentage < 100) {
+			return { position: `${percentage}%`, status: 'Validating...' };
+		} else {
+			return { status: 'Finishing...' };
 		}
-		return `${bytesToClosestUnit(state.position)} flashed`;
-	} else if (isValidating) {
-		return `${state.percentage}% Validating`;
-	} else if (!isFlashing && !isValidating) {
-		return 'Failed';
 	}
+	return { status: 'Failed' };
+}
 
-	throw new Error(`Invalid state: ${JSON.stringify(state)}`);
+export function titleFromFlashState(
+	state: Pick<FlashState, 'type' | 'percentage' | 'position'>,
+): string {
+	const { status, position } = fromFlashState(state);
+	if (position !== undefined) {
+		return `${position} ${status}`;
+	}
+	return status;
 }

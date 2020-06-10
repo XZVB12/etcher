@@ -17,6 +17,8 @@
 import { delay } from 'bluebird';
 import * as electron from 'electron';
 import { autoUpdater } from 'electron-updater';
+import { promises as fs } from 'fs';
+import { platform } from 'os';
 import * as _ from 'lodash';
 import * as path from 'path';
 import * as semver from 'semver';
@@ -28,8 +30,8 @@ import * as settings from './app/models/settings';
 import * as analytics from './app/modules/analytics';
 import { buildWindowMenu } from './menu';
 
-const configUrl =
-	settings.get('configUrl') || 'https://balena.io/etcher/static/config.json';
+const customProtocol = 'etcher';
+const scheme = `${customProtocol}://`;
 const updatablePackageTypes = ['appimage', 'nsis', 'dmg'];
 const packageUpdatable = _.includes(updatablePackageTypes, packageType);
 let packageUpdated = false;
@@ -38,7 +40,7 @@ async function checkForUpdates(interval: number) {
 	// We use a while loop instead of a setInterval to preserve
 	// async execution time between each function call
 	while (!packageUpdated) {
-		if (settings.get('updatesEnabled')) {
+		if (await settings.get('updatesEnabled')) {
 			try {
 				const release = await autoUpdater.checkForUpdates();
 				const isOutdated =
@@ -56,8 +58,64 @@ async function checkForUpdates(interval: number) {
 	}
 }
 
-function createMainWindow() {
-	const fullscreen = Boolean(settings.get('fullscreen'));
+async function isFile(filePath: string): Promise<boolean> {
+	try {
+		const stat = await fs.stat(filePath);
+		return stat.isFile();
+	} catch {
+		// noop
+	}
+	return false;
+}
+
+async function getCommandLineURL(argv: string[]): Promise<string | undefined> {
+	argv = argv.slice(electron.app.isPackaged ? 1 : 2);
+	if (argv.length) {
+		const value = argv[argv.length - 1];
+		// Take into account electron arguments
+		if (value.startsWith('--')) {
+			return;
+		}
+		// https://stackoverflow.com/questions/10242115/os-x-strange-psn-command-line-parameter-when-launched-from-finder
+		if (platform() === 'darwin' && value.startsWith('-psn_')) {
+			return;
+		}
+		if (
+			!value.startsWith('http://') &&
+			!value.startsWith('https://') &&
+			!value.startsWith(scheme) &&
+			!(await isFile(value))
+		) {
+			return;
+		}
+		return value;
+	}
+}
+
+const sourceSelectorReady = new Promise((resolve) => {
+	electron.ipcMain.on('source-selector-ready', resolve);
+});
+
+async function selectImageURL(url?: string) {
+	// 'data:,' is the default chromedriver url that is passed as last argument when running spectron tests
+	if (url !== undefined && url !== 'data:,') {
+		url = url.startsWith(scheme) ? url.slice(scheme.length) : url;
+		await sourceSelectorReady;
+		electron.BrowserWindow.getAllWindows().forEach((window) => {
+			window.webContents.send('select-image', url);
+		});
+	}
+}
+
+// This will catch clicks on links such as <a href="etcher://...">Open in Etcher</a>
+// We need to listen to the event before everything else otherwise the event won't be fired
+electron.app.on('open-url', async (event, data) => {
+	event.preventDefault();
+	await selectImageURL(data);
+});
+
+async function createMainWindow() {
+	const fullscreen = Boolean(await settings.get('fullscreen'));
 	const defaultWidth = 800;
 	const defaultHeight = 480;
 	let width = defaultWidth;
@@ -78,15 +136,18 @@ function createMainWindow() {
 		kiosk: fullscreen,
 		autoHideMenuBar: true,
 		titleBarStyle: 'hiddenInset',
-		icon: path.join(__dirname, '..', '..', 'assets', 'icon.png'),
+		icon: path.join(__dirname, 'media', 'icon.png'),
 		darkTheme: true,
 		webPreferences: {
 			backgroundThrottling: false,
 			nodeIntegration: true,
 			webviewTag: true,
 			zoomFactor: width / defaultWidth,
+			enableRemoteModule: true,
 		},
 	});
+
+	electron.app.setAsDefaultProtocolClient(customProtocol);
 
 	buildWindowMenu(mainWindow);
 	mainWindow.setFullScreen(true);
@@ -100,23 +161,21 @@ function createMainWindow() {
 	// Prevent external resources from being loaded (like images)
 	// when dropping them on the WebView.
 	// See https://github.com/electron/electron/issues/5919
-	mainWindow.webContents.on('will-navigate', event => {
+	mainWindow.webContents.on('will-navigate', (event) => {
 		event.preventDefault();
 	});
 
-	mainWindow.loadURL(
-		`file://${path.join(__dirname, '..', 'lib', 'gui', 'app', 'index.html')}`,
-	);
+	mainWindow.loadURL(`file://${path.join(__dirname, 'index.html')}`);
 
 	const page = mainWindow.webContents;
 
 	page.once('did-frame-finish-load', async () => {
-		autoUpdater.on('error', err => {
+		autoUpdater.on('error', (err) => {
 			analytics.logException(err);
 		});
 		if (packageUpdatable) {
 			try {
-				const onlineConfig = await getConfig(configUrl);
+				const onlineConfig = await getConfig();
 				const autoUpdaterConfig = _.get(
 					onlineConfig,
 					['autoUpdates', 'autoUpdaterConfig'],
@@ -136,8 +195,10 @@ function createMainWindow() {
 			}
 		}
 	});
+	return mainWindow;
 }
 
+electron.app.allowRendererProcessReuse = false;
 electron.app.on('window-all-closed', electron.app.quit);
 
 // Sending a `SIGINT` (e.g: Ctrl-C) to an Electron app that registers
@@ -147,22 +208,24 @@ electron.app.on('window-all-closed', electron.app.quit);
 // make use of it to ensure the browser window is completely destroyed.
 // See https://github.com/electron/electron/issues/5273
 electron.app.on('before-quit', () => {
+	electron.app.releaseSingleInstanceLock();
 	process.exit(EXIT_CODES.SUCCESS);
 });
 
 async function main(): Promise<void> {
-	try {
-		await settings.load();
-	} catch (error) {
-		// TODO: What do if loading the config fails?
-		console.error('Error loading settings:');
-		console.error(error);
-	} finally {
-		if (electron.app.isReady()) {
-			createMainWindow();
-		} else {
-			electron.app.on('ready', createMainWindow);
-		}
+	if (!electron.app.requestSingleInstanceLock()) {
+		electron.app.quit();
+	} else {
+		await electron.app.whenReady();
+		const window = await createMainWindow();
+		electron.app.on('second-instance', async (_event, argv) => {
+			if (window.isMinimized()) {
+				window.restore();
+			}
+			window.focus();
+			await selectImageURL(await getCommandLineURL(argv));
+		});
+		await selectImageURL(await getCommandLineURL(process.argv));
 	}
 }
 

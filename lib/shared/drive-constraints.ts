@@ -44,7 +44,7 @@ export function isSystemDrive(drive: DrivelistDrive): boolean {
 }
 
 export interface Image {
-	path: string;
+	path?: string;
 	isSizeEstimated?: boolean;
 	compressedSize?: number;
 	recommendedDriveSize?: number;
@@ -58,19 +58,16 @@ export interface Image {
  * In the context of Etcher, a source drive is a drive
  * containing the image.
  */
-export function isSourceDrive(drive: DrivelistDrive, image: Image): boolean {
-	const mountpoints = _.get(drive, ['mountpoints'], []);
-	const imagePath = _.get(image, ['path']);
-
-	if (!imagePath || _.isEmpty(mountpoints)) {
-		return false;
+export function isSourceDrive(
+	drive: DrivelistDrive,
+	image: Image = {},
+): boolean {
+	for (const mountpoint of drive.mountpoints || []) {
+		if (image.path !== undefined && pathIsInside(image.path, mountpoint.path)) {
+			return true;
+		}
 	}
-
-	return _.some(
-		_.map(mountpoints, mountpoint => {
-			return pathIsInside(imagePath, mountpoint.path);
-		}),
-	);
+	return false;
 }
 
 /**
@@ -170,7 +167,7 @@ export const COMPATIBILITY_STATUS_TYPES = {
  */
 export function getDriveImageCompatibilityStatuses(
 	drive: DrivelistDrive,
-	image: Image,
+	image: Image = {},
 ) {
 	const statusList = [];
 
@@ -235,7 +232,7 @@ export function getListDriveImageCompatibilityStatuses(
 	drives: DrivelistDrive[],
 	image: Image,
 ) {
-	return _.flatMap(drives, drive => {
+	return _.flatMap(drives, (drive) => {
 		return getDriveImageCompatibilityStatuses(drive, image);
 	});
 }

@@ -131,8 +131,8 @@ export const error = {
 		].join(' ');
 	},
 
-	genericFlashError: () => {
-		return 'Something went wrong. If it is a compressed image, please check that the archive is not corrupted.';
+	genericFlashError: (err: Error) => {
+		return `Something went wrong. If it is a compressed image, please check that the archive is not corrupted.\n${err.message}`;
 	},
 
 	validation: () => {
@@ -141,10 +141,6 @@ export const error = {
 			'corruption issues when reading the image back from the drive.',
 			'\n\nPlease consider writing the image to a different drive.',
 		].join(' ');
-	},
-
-	invalidImage: (imagePath: string) => {
-		return `${imagePath} is not a supported image type.`;
 	},
 
 	openImage: (imageBasename: string, errorMessage: string) => {
@@ -190,5 +186,9 @@ export const error = {
 			'The writer process ended unexpectedly.',
 			'Please try again, and contact the Etcher team if the problem persists.',
 		].join(' ');
+	},
+
+	unsupportedProtocol: () => {
+		return 'Only http:// and https:// URLs are supported.';
 	},
 };

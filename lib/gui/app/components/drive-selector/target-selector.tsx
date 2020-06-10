@@ -34,15 +34,15 @@ import {
 } from '../../styled-components';
 import { middleEllipsis } from '../../utils/middle-ellipsis';
 
-const TargetDetail = styled(props => <Txt.span {...props}></Txt.span>)`
+const TargetDetail = styled((props) => <Txt.span {...props}></Txt.span>)`
 	float: ${({ float }) => float};
 `;
 
 interface TargetSelectorProps {
 	targets: any[];
 	disabled: boolean;
-	openDriveSelector: () => any;
-	reselectDrive: () => any;
+	openDriveSelector: () => void;
+	reselectDrive: () => void;
 	flashing: boolean;
 	show: boolean;
 	tooltip: string;
@@ -118,7 +118,7 @@ export function TargetSelector(props: TargetSelectorProps) {
 		}
 		return (
 			<>
-				<StepNameButton plain tooltip={props.tooltip}>
+				<StepNameButton plain tooltip={props.tooltip} fontSize={16}>
 					{targets.length} Targets
 				</StepNameButton>
 				{!props.flashing && (
@@ -133,7 +133,8 @@ export function TargetSelector(props: TargetSelectorProps) {
 
 	return (
 		<StepButton
-			tabindex={targets.length > 0 ? -1 : 2}
+			primary
+			tabIndex={targets.length > 0 ? -1 : 2}
 			disabled={props.disabled}
 			onClick={props.openDriveSelector}
 		>

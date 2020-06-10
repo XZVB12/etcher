@@ -16,29 +16,23 @@
 
 import * as React from 'react';
 import styled from 'styled-components';
-import { position, right } from 'styled-system';
-import { BaseButton, ThemedProvider } from '../../styled-components';
 
-const Div = styled.div<any>`
-	${position}
-	${right}
+import { BaseButton } from '../../styled-components';
+
+const FlashAnotherButton = styled(BaseButton)`
+	position: absolute;
+	right: 152px;
+	top: 60px;
 `;
 
 export interface FlashAnotherProps {
-	onClick: (options: { preserveImage: boolean }) => void;
+	onClick: () => void;
 }
 
 export const FlashAnother = (props: FlashAnotherProps) => {
 	return (
-		<ThemedProvider>
-			<Div position="absolute" right="152px">
-				<BaseButton
-					primary
-					onClick={props.onClick.bind(null, { preserveImage: true })}
-				>
-					Flash Another
-				</BaseButton>
-			</Div>
-		</ThemedProvider>
+		<FlashAnotherButton primary onClick={props.onClick}>
+			Flash Another
+		</FlashAnotherButton>
 	);
 };

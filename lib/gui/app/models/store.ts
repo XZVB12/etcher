@@ -17,12 +17,10 @@
 import * as Immutable from 'immutable';
 import * as _ from 'lodash';
 import * as redux from 'redux';
-import * as uuidV4 from 'uuid/v4';
+import { v4 as uuidV4 } from 'uuid';
 
 import * as constraints from '../../../shared/drive-constraints';
 import * as errors from '../../../shared/errors';
-import * as fileExtensions from '../../../shared/file-extensions';
-import * as supportedFormats from '../../../shared/supported-formats';
 import * as utils from '../../../shared/utils';
 import * as settings from './settings';
 
@@ -34,7 +32,7 @@ function verifyNoNilFields(
 	fields: string[],
 	name: string,
 ) {
-	const nilFields = _.filter(fields, field => {
+	const nilFields = _.filter(fields, (field) => {
 		return _.isNil(_.get(object, field));
 	});
 	if (nilFields.length) {
@@ -45,7 +43,7 @@ function verifyNoNilFields(
 /**
  * @summary FLASH_STATE fields that can't be nil
  */
-const flashStateNoNilFields = ['speed', 'totalSpeed'];
+const flashStateNoNilFields = ['speed'];
 
 /**
  * @summary SELECT_IMAGE fields that can't be nil
@@ -55,7 +53,7 @@ const selectImageNoNilFields = ['path', 'extension'];
 /**
  * @summary Application default state
  */
-const DEFAULT_STATE = Immutable.fromJS({
+export const DEFAULT_STATE = Immutable.fromJS({
 	applicationSessionUuid: '',
 	flashingWorkflowUuid: '',
 	availableDrives: [],
@@ -63,16 +61,15 @@ const DEFAULT_STATE = Immutable.fromJS({
 		devices: Immutable.OrderedSet(),
 	},
 	isFlashing: false,
+	devicePaths: [],
+	failedDevicePaths: [],
 	flashResults: {},
 	flashState: {
-		flashing: 0,
-		verifying: 0,
-		successful: 0,
+		active: 0,
 		failed: 0,
 		percentage: 0,
 		speed: null,
 		averageSpeed: null,
-		totalSpeed: null,
 	},
 	lastAverageFlashingSpeed: null,
 });
@@ -81,6 +78,8 @@ const DEFAULT_STATE = Immutable.fromJS({
  * @summary Application supported action messages
  */
 export enum Actions {
+	SET_DEVICE_PATHS,
+	SET_FAILED_DEVICE_PATHS,
 	SET_AVAILABLE_DRIVES,
 	SET_FLASH_STATE,
 	RESET_FLASH_STATE,
@@ -136,9 +135,9 @@ function storeReducer(
 
 			drives = _.sortBy(drives, [
 				// Devices with no devicePath first (usbboot)
-				d => !!d.devicePath,
+				(d) => !!d.devicePath,
 				// Then sort by devicePath (only available on Linux with udev) or device
-				d => d.devicePath || d.device,
+				(d) => d.devicePath || d.device,
 			]);
 
 			const newState = state.set('availableDrives', Immutable.fromJS(drives));
@@ -168,7 +167,7 @@ function storeReducer(
 			);
 
 			const shouldAutoselectAll = Boolean(
-				settings.get('disableExplicitDriveSelection'),
+				settings.getSync('disableExplicitDriveSelection'),
 			);
 			const AUTOSELECT_DRIVE_COUNT = 1;
 			const nonStaleSelectedDevices = nonStaleNewState
@@ -234,17 +233,7 @@ function storeReducer(
 
 			verifyNoNilFields(action.data, flashStateNoNilFields, 'flash');
 
-			if (
-				!_.every(
-					_.pick(action.data, [
-						'flashing',
-						'verifying',
-						'successful',
-						'failed',
-					]),
-					_.isFinite,
-				)
-			) {
+			if (!_.every(_.pick(action.data, ['active', 'failed']), _.isFinite)) {
 				throw errors.createError({
 					title: 'State quantity field(s) not finite number',
 				});
@@ -266,7 +255,7 @@ function storeReducer(
 			}
 
 			let ret = state.set('flashState', Immutable.fromJS(action.data));
-			if (action.data.flashing) {
+			if (action.data.type === 'flashing') {
 				ret = ret.set('lastAverageFlashingSpeed', action.data.averageSpeed);
 			}
 			return ret;
@@ -277,6 +266,12 @@ function storeReducer(
 				.set('isFlashing', false)
 				.set('flashState', DEFAULT_STATE.get('flashState'))
 				.set('flashResults', DEFAULT_STATE.get('flashResults'))
+				.set('devicePaths', DEFAULT_STATE.get('devicePaths'))
+				.set('failedDevicePaths', DEFAULT_STATE.get('failedDevicePaths'))
+				.set(
+					'lastAverageFlashingSpeed',
+					DEFAULT_STATE.get('lastAverageFlashingSpeed'),
+				)
 				.delete('flashUuid');
 		}
 
@@ -341,10 +336,6 @@ function storeReducer(
 			return state
 				.set('isFlashing', false)
 				.set('flashResults', Immutable.fromJS(action.data))
-				.set(
-					'lastAverageFlashingSpeed',
-					DEFAULT_STATE.get('lastAverageFlashingSpeed'),
-				)
 				.set('flashState', DEFAULT_STATE.get('flashState'));
 		}
 
@@ -407,51 +398,6 @@ function storeReducer(
 				throw errors.createError({
 					title: `Invalid image path: ${action.data.path}`,
 				});
-			}
-
-			if (!_.isString(action.data.extension)) {
-				throw errors.createError({
-					title: `Invalid image extension: ${action.data.extension}`,
-				});
-			}
-
-			const extension = _.toLower(action.data.extension);
-
-			if (!_.includes(supportedFormats.getAllExtensions(), extension)) {
-				throw errors.createError({
-					title: `Invalid image extension: ${action.data.extension}`,
-				});
-			}
-
-			let lastImageExtension = fileExtensions.getLastFileExtension(
-				action.data.path,
-			);
-			lastImageExtension = _.isString(lastImageExtension)
-				? _.toLower(lastImageExtension)
-				: lastImageExtension;
-
-			if (lastImageExtension !== extension) {
-				if (!_.isString(action.data.archiveExtension)) {
-					throw errors.createError({
-						title: 'Missing image archive extension',
-					});
-				}
-
-				const archiveExtension = _.toLower(action.data.archiveExtension);
-
-				if (
-					!_.includes(supportedFormats.getAllExtensions(), archiveExtension)
-				) {
-					throw errors.createError({
-						title: `Invalid image archive extension: ${action.data.archiveExtension}`,
-					});
-				}
-
-				if (lastImageExtension !== archiveExtension) {
-					throw errors.createError({
-						title: `Image archive extension mismatch: ${action.data.archiveExtension} and ${lastImageExtension}`,
-					});
-				}
 			}
 
 			const MINIMUM_IMAGE_SIZE = 0;
@@ -553,6 +499,14 @@ function storeReducer(
 
 		case Actions.SET_FLASHING_WORKFLOW_UUID: {
 			return state.set('flashingWorkflowUuid', action.data);
+		}
+
+		case Actions.SET_DEVICE_PATHS: {
+			return state.set('devicePaths', action.data);
+		}
+
+		case Actions.SET_FAILED_DEVICE_PATHS: {
+			return state.set('failedDevicePaths', action.data);
 		}
 
 		default: {

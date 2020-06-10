@@ -26,6 +26,7 @@ import { Actions, store } from './store';
 export function resetState() {
 	store.dispatch({
 		type: Actions.RESET_FLASH_STATE,
+		data: {},
 	});
 }
 
@@ -46,6 +47,7 @@ export function isFlashing(): boolean {
 export function setFlashingFlag() {
 	store.dispatch({
 		type: Actions.SET_FLASHING_FLAG,
+		data: {},
 	});
 }
 
@@ -66,6 +68,24 @@ export function unsetFlashingFlag(results: {
 	});
 }
 
+export function setDevicePaths(devicePaths: string[]) {
+	store.dispatch({
+		type: Actions.SET_DEVICE_PATHS,
+		data: devicePaths,
+	});
+}
+
+export function addFailedDevicePath(devicePath: string) {
+	const failedDevicePathsSet = new Set(
+		store.getState().toJS().failedDevicePaths,
+	);
+	failedDevicePathsSet.add(devicePath);
+	store.dispatch({
+		type: Actions.SET_FAILED_DEVICE_PATHS,
+		data: Array.from(failedDevicePathsSet),
+	});
+}
+
 /**
  * @summary Set the flashing state
  */
@@ -74,7 +94,8 @@ export function setProgressState(
 ) {
 	// Preserve only one decimal place
 	const PRECISION = 1;
-	const data = _.assign({}, state, {
+	const data = {
+		...state,
 		percentage:
 			state.percentage !== undefined && _.isFinite(state.percentage)
 				? Math.floor(state.percentage)
@@ -87,14 +108,7 @@ export function setProgressState(
 
 			return null;
 		}),
-		totalSpeed: _.attempt(() => {
-			if (_.isFinite(state.totalSpeed)) {
-				return _.round(bytesToMegabytes(state.totalSpeed), PRECISION);
-			}
-
-			return null;
-		}),
-	});
+	};
 
 	store.dispatch({
 		type: Actions.SET_FLASH_STATE,
@@ -107,10 +121,7 @@ export function getFlashResults() {
 }
 
 export function getFlashState() {
-	return store
-		.getState()
-		.get('flashState')
-		.toJS();
+	return store.getState().get('flashState').toJS();
 }
 
 export function wasLastFlashCancelled() {
