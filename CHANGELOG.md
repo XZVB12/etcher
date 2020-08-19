@@ -3,6 +3,50 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+# v1.5.103
+## (2020-08-18)
+
+* Update rendition  to ^17 [Alexis Svinartchouk]
+* Update electron to 9.2.0 [Alexis Svinartchouk]
+* Update etcher-sdk to ^4.1.23 [Alexis Svinartchouk]
+* Move linting and testing into package.json [Alexis Svinartchouk]
+* Set module: es2015 in tsconfig.json [Alexis Svinartchouk]
+* Replace native elevator with sudo-prompt on windows [Alexis Svinartchouk]
+* Don't import WeakMap polyfill in deep-map-keys [Alexis Svinartchouk]
+* Don't use lodash in child-writer.js [Alexis Svinartchouk]
+* Optimize svgs [Alexis Svinartchouk]
+* User regular stream in lzma-native instead of readable-stream [Alexis Svinartchouk]
+* Remove Bluebird [Alexis Svinartchouk]
+
+# v1.5.102
+## (2020-07-27)
+
+* Fix flashing truncated images, fix flashing large dmgs [Alexis Svinartchouk]
+* Electron 9.1.1 [Alexis Svinartchouk]
+* Remove bluebird from main process, reduce lodash usage [Alexis Svinartchouk]
+* Centralize imports in child-writer [Alexis Svinartchouk]
+* Split main process and child-writer js files [Alexis Svinartchouk]
+* Stop using request, replace it with already used axios [Alexis Svinartchouk]
+* Remove font awesome unused icons from the generated bundle [Alexis Svinartchouk]
+* Remove no longer used .sass-lint.yml [Alexis Svinartchouk]
+* Use tslib [Alexis Svinartchouk]
+* Use strict typescript compiler option [Alexis Svinartchouk]
+* Update rendition to ^16.1.1 [Alexis Svinartchouk]
+
+# v1.5.101
+## (2020-07-09)
+
+* Resize modal to show content appropriately [Lorenzo Alberto Maria Ambrosi]
+* Update etcher-sdk to v4.1.16 [Lorenzo Alberto Maria Ambrosi]
+* Convert sass to plain css [Lorenzo Alberto Maria Ambrosi]
+* Remove unused scss [Lorenzo Alberto Maria Ambrosi]
+* Remove unused warning in settings [Lorenzo Alberto Maria Ambrosi]
+* Refactor UI without bootstrap & flexboxgrid [Lorenzo Alberto Maria Ambrosi]
+* Restyle modals [Lorenzo Alberto Maria Ambrosi]
+* Remove bootstrap & flexboxgrid [Lorenzo Alberto Maria Ambrosi]
+* Rework and move flashing view elements [Lorenzo Alberto Maria Ambrosi]
+* Refactor UI grid to use rendition [Lorenzo Alberto Maria Ambrosi]
+
 # v1.5.100
 ## (2020-06-22)
 

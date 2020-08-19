@@ -135,8 +135,20 @@ const commonConfig = {
 			},
 			{
 				test: /\.tsx?$/,
-				use: 'ts-loader',
+				use: [
+					{
+						loader: 'ts-loader',
+						options: {
+							configFile: 'tsconfig.webpack.json',
+						},
+					},
+				],
 			},
+			// don't import WeakMap polyfill in deep-map-keys (required in corvus)
+			replace(/node_modules\/deep-map-keys\/lib\/deep-map-keys\.js$/, {
+				search: "var WeakMap = require('es6-weak-map');",
+				replace: '',
+			}),
 			// force axios to use http backend (not xhr) to support streams
 			replace(/node_modules\/axios\/lib\/defaults\.js$/, {
 				search: './adapters/xhr',
@@ -154,16 +166,24 @@ const commonConfig = {
 					replace: 'bindings',
 				},
 			),
-			// remove node-pre-gyp magic from lzma-native
-			replace(/node_modules\/lzma-native\/index\.js$/, {
-				search: 'require(binding_path)',
-				replace: () => {
-					return `require('./${path.posix.join(
-						LZMA_BINDINGS_FOLDER,
-						'lzma_native.node',
-					)}')`;
+			replace(
+				/node_modules\/lzma-native\/index\.js$/,
+				// remove node-pre-gyp magic from lzma-native
+				{
+					search: 'require(binding_path)',
+					replace: () => {
+						return `require('./${path.posix.join(
+							LZMA_BINDINGS_FOLDER,
+							'lzma_native.node',
+						)}')`;
+					},
 				},
-			}),
+				// use regular stream module instead of readable-stream
+				{
+					search: "var stream = require('readable-stream');",
+					replace: "var stream = require('stream');",
+				},
+			),
 			// remove node-pre-gyp magic from usb
 			replace(/node_modules\/@balena.io\/usb\/usb\.js$/, {
 				search: 'require(binding_path)',
@@ -288,15 +308,32 @@ const guiConfig = {
 	],
 };
 
-const etcherConfig = {
+const mainConfig = {
 	...commonConfig,
 	target: 'electron-main',
 	node: {
 		__dirname: false,
 		__filename: true,
 	},
+};
+
+const etcherConfig = {
+	...mainConfig,
 	entry: {
-		etcher: path.join(__dirname, 'lib', 'start.ts'),
+		etcher: path.join(__dirname, 'lib', 'gui', 'etcher.ts'),
+	},
+};
+
+const childWriterConfig = {
+	...mainConfig,
+	entry: {
+		'child-writer': path.join(
+			__dirname,
+			'lib',
+			'gui',
+			'modules',
+			'child-writer.ts',
+		),
 	},
 };
 
@@ -309,22 +346,7 @@ const cssConfig = {
 		rules: [
 			{
 				test: /\.css$/i,
-				use: 'css-loader',
-			},
-			{
-				test: /\.s[ac]ss$/i,
-				use: [
-					MiniCssExtractPlugin.loader,
-					'css-loader',
-					{
-						loader: 'sass-loader',
-						options: {
-							sassOptions: {
-								fiber: false,
-							},
-						},
-					},
-				],
+				use: [MiniCssExtractPlugin.loader, 'css-loader'],
 			},
 			{
 				test: /\.(woff|woff2|eot|ttf|otf|svg)$/,
@@ -345,11 +367,11 @@ const cssConfig = {
 		}),
 	],
 	entry: {
-		index: path.join(__dirname, 'lib', 'gui', 'app', 'scss', 'main.scss'),
+		index: path.join(__dirname, 'lib', 'gui', 'app', 'css', 'main.css'),
 	},
 	output: {
 		path: path.join(__dirname, 'generated'),
 	},
 };
 
-module.exports = [cssConfig, guiConfig, etcherConfig];
+module.exports = [cssConfig, guiConfig, etcherConfig, childWriterConfig];

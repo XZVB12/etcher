@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-import {
-	faChevronDown,
-	faExclamationTriangle,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import ExclamationTriangleSvg from '@fortawesome/fontawesome-free/svgs/solid/exclamation-triangle.svg';
+import ChevronDownSvg from '@fortawesome/fontawesome-free/svgs/solid/chevron-down.svg';
 import { scanner, sourceDestination } from 'etcher-sdk';
 import * as React from 'react';
 import {
-	Badge,
-	Table,
-	Txt,
 	Flex,
-	Link,
-	TableColumn,
 	ModalProps,
+	Txt,
+	Badge,
+	Link,
+	Table,
+	TableColumn,
 } from 'rendition';
 import styled from 'styled-components';
 
@@ -50,7 +47,7 @@ import {
 import { store } from '../../models/store';
 import { logEvent, logException } from '../../modules/analytics';
 import { open as openExternal } from '../../os/open-external/services/open-external';
-import { Modal } from '../../styled-components';
+import { Modal, ScrollableFlex } from '../../styled-components';
 
 import TargetSVGIcon from '../../../assets/tgt.svg';
 
@@ -82,19 +79,6 @@ function isDrivelistDrive(
 ): drive is scanner.adapters.DrivelistDrive {
 	return typeof (drive as scanner.adapters.DrivelistDrive).size === 'number';
 }
-
-const ScrollableFlex = styled(Flex)`
-	overflow: auto;
-
-	::-webkit-scrollbar {
-		display: none;
-	}
-
-	> div > div {
-		/* This is required for the sticky table header in TargetsTable */
-		overflow-x: visible;
-	}
-`;
 
 const TargetsTable = styled(({ refFn, ...props }) => {
 	return (
@@ -177,7 +161,7 @@ export class TargetSelectorModal extends React.Component<
 	TargetSelectorModalProps,
 	TargetSelectorModalState
 > {
-	unsubscribe: () => void;
+	private unsubscribe: (() => void) | undefined;
 	tableColumns: Array<TableColumn<Target>>;
 
 	constructor(props: TargetSelectorModalProps) {
@@ -201,10 +185,7 @@ export class TargetSelectorModal extends React.Component<
 				render: (description: string, drive: Target) => {
 					return isDrivelistDrive(drive) && drive.isSystem ? (
 						<Flex alignItems="center">
-							<FontAwesomeIcon
-								style={{ color: '#fca321' }}
-								icon={faExclamationTriangle}
-							/>
+							<ExclamationTriangleSvg height="1em" fill="#fca321" />
 							<Txt ml={8}>{description}</Txt>
 						</Flex>
 					) : (
@@ -336,7 +317,7 @@ export class TargetSelectorModal extends React.Component<
 	}
 
 	componentWillUnmount() {
-		this.unsubscribe();
+		this.unsubscribe?.();
 	}
 
 	render() {
@@ -376,10 +357,6 @@ export class TargetSelectorModal extends React.Component<
 				cancel={cancel}
 				done={() => done(selectedList)}
 				action={`Select (${selectedList.length})`}
-				style={{
-					width: '780px',
-					height: '420px',
-				}}
 				primaryButtonProps={{
 					primary: !hasStatus,
 					warning: hasStatus,
@@ -387,7 +364,7 @@ export class TargetSelectorModal extends React.Component<
 				}}
 				{...props}
 			>
-				<Flex width="100%" height="100%">
+				<Flex width="100%" height="90%">
 					{!hasAvailableDrives() ? (
 						<Flex
 							flexDirection="column"
@@ -399,11 +376,7 @@ export class TargetSelectorModal extends React.Component<
 							<b>Plug a target drive</b>
 						</Flex>
 					) : (
-						<ScrollableFlex
-							flexDirection="column"
-							width="100%"
-							height="calc(100% - 15px)"
-						>
+						<ScrollableFlex flexDirection="column" width="100%">
 							<TargetsTable
 								refFn={(t: Table<Target>) => {
 									if (t !== null) {
@@ -448,7 +421,7 @@ export class TargetSelectorModal extends React.Component<
 									onClick={() => this.setState({ showSystemDrives: true })}
 								>
 									<Flex alignItems="center">
-										<FontAwesomeIcon icon={faChevronDown} />
+										<ChevronDownSvg height="1em" fill="currentColor" />
 										<Txt ml={8}>Show {numberOfHiddenSystemDrives} hidden</Txt>
 									</Flex>
 								</Link>
