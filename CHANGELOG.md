@@ -3,6 +3,716 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+# v1.5.117
+## (2021-04-02)
+
+* Rename mac releases (keep old naming) [Alexis Svinartchouk]
+* Disable spectron tests on macOS [Alexis Svinartchouk]
+* Update electron to v12.0.2 [Alexis Svinartchouk]
+
+<details>
+<summary> Update etcher-sdk from 6.1.1 to 6.2.1 [Alexis Svinartchouk] </summary>
+
+> ## etcher-sdk-6.2.1
+> ### (2021-03-26)
+> 
+> 
+> <details>
+> <summary> Update node-raspberrypi-usbboot from 0.2.11 to 0.3.0 [Alexis Svinartchouk] </summary>
+> 
+>> ### node-raspberrypi-usbboot-0.3.0
+>> #### (2021-03-26)
+>> 
+>> * Add support for compute module 4 [Alexis Svinartchouk]
+>> * Fix size endianness of boot_message_t message [Alexis Svinartchouk]
+>> 
+> </details>
+> 
+> 
+> ## etcher-sdk-6.2.0
+> ### (2021-02-18)
+> 
+> * Added BeagleBone USB Boot example [Parthiban Gandhi]
+> * Added BeagleBone USB Boot support [Parthiban Gandhi]
+> 
+</details>
+
+* Fix getAppPath() returning an asar file on macOS [Alexis Svinartchouk]
+* Grammar fix [Andrew Scheller]
+* (docs) update README.md [vlad doster]
+* Update copyright year in electron-builder.yml [Andrew Scheller]
+* Update copyright year in .resinci.json [Andrew Scheller]
+* Separate the Yum and DNF instructions. [Dugan Chen]
+* Set msvs_version to 2019 when rebuilding [Alexis Svinartchouk]
+* Use moduleIds: 'natural' in webpack config to keep js files in arm64 and x64 mac builds identical [Alexis Svinartchouk]
+* Update electron-builder to 22.10.5 [Alexis Svinartchouk]
+* Update spectron to v13 [Alexis Svinartchouk]
+* Update dependencies, use aws4-axios@2.2.1 to avoid adding more dependiencies [Alexis Svinartchouk]
+* Update scripts to build universal mac dmgs on the ci [Alexis Svinartchouk]
+* Fix beforeBuild.js script to also work on mac [Alexis Svinartchouk]
+* Support building universal dmgs (x64 and arm64) for mac [Alexis Svinartchouk]
+* Update electron-builder to 22.10.4 [Alexis Svinartchouk]
+* Fix titlebar z-index [Alexis Svinartchouk]
+* Explicitly set contextIsolation to false [Alexis Svinartchouk]
+* Update electron from 9.4.1 to 11.2.3 [Alexis Svinartchouk]
+
+<details>
+<summary> Update etcher-sdk from 6.1.0 to 6.1.1 [Alexis Svinartchouk] </summary>
+
+> ## etcher-sdk-6.1.1
+> ### (2021-02-10)
+> 
+> 
+> <details>
+> <summary> Update node-raspberrypi-usbboot from 0.2.10 to 0.2.11 [Alexis Svinartchouk] </summary>
+> 
+>> ### node-raspberrypi-usbboot-0.2.11
+>> #### (2021-02-10)
+>> 
+>> * Update @balena.io/usb from 1.3.12 to 1.3.14 [Alexis Svinartchouk]
+>> 
+> </details>
+> 
+> 
+</details>
+
+# v1.5.116
+## (2021-02-03)
+
+* Only cleanup temporary decompressed files in child-writer [Alexis Svinartchouk]
+* Add .versionbot/CHANGELOG.yml [Alexis Svinartchouk]
+* Stop using node-tmp, use withTmpFile from etcher-sdk instead [Alexis Svinartchouk]
+
+<details>
+<summary> Update etcher-sdk from 5.2.2 to 6.1.0 [Alexis Svinartchouk] </summary>
+
+> ## etcher-sdk-6.1.0
+> ### (2021-02-03)
+> 
+> * Prefix temporary decompressed images filenames [Alexis Svinartchouk]
+> 
+> ## etcher-sdk-6.0.1
+> ### (2021-02-02)
+> 
+> * Ignore ENOENT errors on unlink in withTmpFile [Alexis Svinartchouk]
+> 
+> ## etcher-sdk-6.0.0
+> ### (2021-02-01)
+> 
+> * Export tmp and add prefix and postfix options [Alexis Svinartchouk]
+> 
+> ## etcher-sdk-5.2.3
+> ### (2021-01-26)
+> 
+> * upgrade lint [Zane Hitchcox]
+> 
+</details>
+
+* Revert "Change some border colors to have higher contrast" [Alexis Svinartchouk]
+* Update electron to v9.4.1 [Alexis Svinartchouk]
+
+<details>
+<summary> Update etcher-sdk from 5.2.1 to 5.2.2 [Alexis Svinartchouk] </summary>
+
+> ## etcher-sdk-5.2.2
+> ### (2021-01-19)
+> 
+> 
+> <details>
+> <summary> Update drivelist from 9.2.2 to 9.2.4 [Alexis Svinartchouk] </summary>
+> 
+>> ### drivelist-9.2.4
+>> #### (2021-01-19)
+>> 
+>> * Pass strings between methods as std::string instead of char * [Floris Bos]
+>> 
+>> ### drivelist-9.2.3
+>> #### (2021-01-19)
+>> 
+>> * Support lsblk versions that do no support the pttype column [Alexis Svinartchouk]
+>> 
+> </details>
+> 
+> 
+</details>
+
+# v1.5.115
+## (2021-01-18)
+
+
+<details>
+<summary> Update etcher-sdk from 5.1.12 to 5.2.1 [Alexis Svinartchouk] </summary>
+
+> ## etcher-sdk-5.2.1
+> ### (2021-01-15)
+> 
+> * Only run one diskpart at a time [Alexis Svinartchouk]
+> * Ignore diskpart VDS_E_DISK_IS_OFFLINE errors [Alexis Svinartchouk]
+> 
+> ## etcher-sdk-5.2.0
+> ### (2021-01-06)
+> 
+> * Store progress on usbboot devices [Alexis Svinartchouk]
+> 
+</details>
+
+# v1.5.114
+## (2021-01-12)
+
+* Remove libappindicator1 debian dependency [Alexis Svinartchouk]
+
+<details>
+<summary> Update etcher-sdk from 5.1.11 to 5.1.12 [Alexis Svinartchouk] </summary>
+
+> ## etcher-sdk-5.1.12
+> ### (2021-01-06)
+> 
+> * Remove BlockDevice.mountpoints incorrect typing [Alexis Svinartchouk]
+> * Update axios to 0.21.1 and aws4-axios to 2.0.1 [Alexis Svinartchouk]
+> 
+</details>
+
+
+<details>
+<summary> Update rendition from 18.8.3 to 19.2.0 [Alexis Svinartchouk] </summary>
+
+> ## rendition-19.2.0
+> ### (2020-12-29)
+> 
+> * Add truncate property to Txt component [JSReds]
+> 
+> ## rendition-19.1.0
+> ### (2020-12-29)
+> 
+> * Add fallback image source to Img component [Stevche Radevski]
+> 
+> ## rendition-19.0.0
+> ### (2020-12-21)
+> 
+> * Remove Arcslider component [Stevche Radevski]
+> 
+> ## rendition-18.20.4
+> ### (2020-12-17)
+> 
+> * Upgrade rehype-raw to latest version [Kakhaber]
+> 
+> ## rendition-18.20.3
+> ### (2020-12-17)
+> 
+> * Fix disabled button tooltip [JSReds]
+> 
+> ## rendition-18.20.2
+> ### (2020-12-16)
+> 
+> * Turn keydown handler into an arrow function [Stevche Radevski]
+> 
+> ## rendition-18.20.1
+> ### (2020-12-14)
+> 
+> * Fix form not getting the Enter key event when nested in a modal [Stevche Radevski]
+> 
+> ## rendition-18.20.0
+> ### (2020-12-14)
+> 
+> * feat: Add new StatsBar component [Graham McCulloch]
+> 
+> ## rendition-18.19.2
+> ### (2020-12-14)
+> 
+> * Update snapshots [Graham McCulloch]
+> * Removed out-of-date documentation and template text [Graham McCulloch]
+> 
+> ## rendition-18.19.1
+> ### (2020-12-04)
+> 
+> * Markdown: Fix line breaks [Kakhaber]
+> 
+> ## rendition-18.19.0
+> ### (2020-12-02)
+> 
+> * Make card size responsive [Stevche Radevski]
+> 
+> ## rendition-18.18.0
+> ### (2020-12-02)
+> 
+> * Allow passing responsive values to datagrid width props [Stevche Radevski]
+> 
+> ## rendition-18.17.2
+> ### (2020-12-01)
+> 
+> * Update snapshots due to a Card change [JSReds]
+> 
+> ## rendition-18.17.1
+> ### (2020-12-01)
+> 
+> * Card: make body to be full height [JSReds]
+> 
+> ## rendition-18.17.0
+> ### (2020-12-01)
+> 
+> * Add star rating component [Kakhaber]
+> 
+> ## rendition-18.16.0
+> ### (2020-11-23)
+> 
+> * Completely revamp the development setup for rendition [Stevche Radevski]
+> 
+> ## rendition-18.15.1
+> ### (2020-11-16)
+> 
+> * Modal: Change the button margins to use the predefined spacing palette [Thodoris Greasidis]
+> 
+> ## rendition-18.15.0
+> ### (2020-11-16)
+> 
+> * Modal: Move the cancel button first for dangerous & warning actions [Thodoris Greasidis]
+> 
+> ## rendition-18.14.0
+> ### (2020-11-16)
+> 
+> * Allow passing checked items as a prop to Table [Stevche Radevski]
+> 
+> ## rendition-18.13.4
+> ### (2020-11-16)
+> 
+> * Fix accidental complete lodash import [Thodoris Greasidis]
+> 
+> ## rendition-18.13.3
+> ### (2020-11-16)
+> 
+> * Form: Remove the flaky Captcha sceenshot test [Thodoris Greasidis]
+> * Update react-simplemde-editor & snapshots for upstream versions [Thodoris Greasidis]
+> 
+> ## rendition-18.13.2
+> ### (2020-10-29)
+> 
+> * Updated snapshots [Graham McCulloch]
+> * Fix: Confirm only depends on the files it needs [Graham McCulloch]
+> 
+> ## rendition-18.13.1
+> ### (2020-10-23)
+> 
+> * Button: Preserve event during confirmation [Kakhaber]
+> 
+> ## rendition-18.13.0
+> ### (2020-10-22)
+> 
+> * Button: Add confirmation property [Kakhaber]
+> 
+> ## rendition-18.12.2
+> ### (2020-10-21)
+> 
+> * Tabs: changed interfaces and props [JSReds]
+> 
+> ## rendition-18.12.1
+> ### (2020-10-20)
+> 
+> * Fix Tabs typings [Stevche Radevski]
+> 
+> ## rendition-18.12.0
+> ### (2020-10-19)
+> 
+> * Add a Grid component [Stevche Radevski]
+> 
+> ## rendition-18.11.3
+> ### (2020-10-14)
+> 
+> * Added more documentation for JsonSchemaRenderer [Graham McCulloch]
+> 
+> ## rendition-18.11.2
+> ### (2020-10-14)
+> 
+> * fix: UI schema for JsonSchemaRenderer DropDownButton and ButtonGroup widgets [Graham McCulloch]
+> 
+> ## rendition-18.11.1
+> ### (2020-10-13)
+> 
+> * Add dark mode to storybook [Stevche Radevski]
+> 
+> ## rendition-18.11.0
+> ### (2020-10-08)
+> 
+> * Allow passing widget to extraFormats field [Stevche Radevski]
+> 
+> ## rendition-18.10.2
+> ### (2020-09-30)
+> 
+> * Resolve module path not relying on node_moules dir [Kakhaber]
+> 
+> ## rendition-18.10.1
+> ### (2020-09-29)
+> 
+> * Set tabpanel height so it stretches to full height [StefKors]
+> * Specify tabs width to fix layout problems [StefKors]
+> 
+> ## rendition-18.10.0
+> ### (2020-09-24)
+> 
+> * feat: Add ColorWidget for JsonSchemaRenderer [Graham McCulloch]
+> 
+> ## rendition-18.9.2
+> ### (2020-09-22)
+> 
+> * Markdown: Ignore decorators inside a code block [Kakhaber]
+> 
+> ## rendition-18.9.1
+> ### (2020-09-21)
+> 
+> * Add compact variation to tabs [StefKors]
+> 
+> ## rendition-18.9.0
+> ### (2020-09-18)
+> 
+> * Improve spacing for Modal and Select components [Stevche Radevski]
+> 
+> ## rendition-18.8.4
+> ### (2020-09-17)
+> 
+> * fix: Use widget's display name to reference the widget [Graham McCulloch]
+> 
+</details>
+
+* Update dependencies [Alexis Svinartchouk]
+* Update @balena/lint to 5.3.0 [Alexis Svinartchouk]
+* Update webpack to v5 [Alexis Svinartchouk]
+* Fix typo in webpack.config.ts comment [Alexis Svinartchouk]
+* docs: fix quote marks [Aaron Shaw]
+* Disable screensaver while flashing (on balena-electron-env) [Alexis Svinartchouk]
+
+# v1.5.113
+## (2020-12-16)
+
+* Show the first error for each drive (not the last) [Alexis Svinartchouk]
+* Fix red leds not showing for failed devices [Alexis Svinartchouk]
+* docs: add documentation links [Aaron Shaw]
+* docs: update macOS version [Aaron Shaw]
+* Improve hover message when the drive is too small [Alexis Svinartchouk]
+* Update electron to v9.4.0 [Alexis Svinartchouk]
+* Update npm to v6.14.8 [Giovanni Garufi]
+* Update rgb leds colors [Alexis Svinartchouk]
+* Remove unmountOnSuccess setting [Alexis Svinartchouk]
+* Only show auto-updates setting on supported targets [Alexis Svinartchouk]
+* Remove dead code in settings modal [Alexis Svinartchouk]
+* Fix effective flashing speed calculation for compressed images [Alexis Svinartchouk]
+* Change some border colors to have higher contrast [Lorenzo Alberto Maria Ambrosi]
+
+<details>
+<summary> Update etcher-sdk from 5.1.10 to 5.1.11 [Alexis Svinartchouk] </summary>
+
+> ## etcher-sdk-5.1.11
+> ### (2020-12-07)
+> 
+> * Don't use the O_SYNC flag for block devices, only O_DIRECT [Alexis Svinartchouk]
+> 
+</details>
+
+
+<details>
+<summary> Update sys-class-rgb-led from 2.1.1 to 3.0.0 [Alexis Svinartchouk] </summary>
+
+> ## sys-class-rgb-led-3.0.0
+> ### (2020-12-03)
+> 
+> * Add example etcher-pro rainbow animation [Alexis Svinartchouk]
+> * Use one setInterval instead of a loop for each led, t in seconds [Alexis Svinartchouk]
+> 
+</details>
+
+# v1.5.112
+## (2020-12-02)
+
+* Add rendition and sys-class-rgb-led to repo.yml [Alexis Svinartchouk]
+
+<details>
+<summary> Update sys-class-rgb-led from 2.1.0 to 2.1.1 [Alexis Svinartchouk] </summary>
+
+> ## sys-class-rgb-led-2.1.1
+> ### (2020-12-01)
+> 
+> * Replace resin-lint with @balena/lint [Alexis Svinartchouk]
+> * Update typescript to v4.1.2 [Alexis Svinartchouk]
+> * Add versionbot changelog [Alexis Svinartchouk]
+> 
+</details>
+
+* Fix layout when the featured project is not showing [Alexis Svinartchouk]
+* Improve flashing error handling [Alexis Svinartchouk]
+* Fix modal content height on Windows [Alexis Svinartchouk]
+
+<details>
+<summary> Update etcher-sdk from 5.1.5 to 5.1.10 [Alexis Svinartchouk] </summary>
+
+> ## etcher-sdk-5.1.10
+> ### (2020-12-02)
+> 
+> 
+> <details>
+> <summary> Update balena-image-fs from 7.0.5 to 7.0.6 [Alexis Svinartchouk] </summary>
+> 
+>> ### balena-image-fs-7.0.6
+>> #### (2020-12-02)
+>> 
+>> 
+>> <details>
+>> <summary> Update ext2fs from 3.0.4 to 3.0.5 [Alexis Svinartchouk] </summary>
+>> 
+>>> #### node-ext2fs-3.0.5
+>>> ##### (2020-12-02)
+>>> 
+>>> * Fix reading and discarding with offsets > 32 bits [Alexis Svinartchouk]
+>>> 
+>> </details>
+>> 
+>> 
+> </details>
+> 
+> 
+> ## etcher-sdk-5.1.9
+> ### (2020-12-01)
+> 
+> * Add repo.yml file [Alexis Svinartchouk]
+> * Update @balena/udif from 1.1.0 to 1.1.1 [Alexis Svinartchouk]
+> 
+> <details>
+> <summary> Update zip-part-stream from 1.0.2 to 1.0.3 [Alexis Svinartchouk] </summary>
+> 
+>> ### zip-part-stream-1.0.3
+>> #### (2020-11-30)
+>> 
+>> * Add versionbot changelog [Alexis Svinartchouk]
+>> 
+> </details>
+> 
+> 
+> <details>
+> <summary> Update node-raspberrypi-usbboot from 0.2.9 to 0.2.10 [Alexis Svinartchouk] </summary>
+> 
+>> ### node-raspberrypi-usbboot-0.2.10
+>> #### (2020-11-30)
+>> 
+>> * Update typescript to v4.1.2 [Alexis Svinartchouk]
+>> * Add versionbot changelog [Alexis Svinartchouk]
+>> 
+> </details>
+> 
+> 
+> <details>
+> <summary> Update mountutils from 1.3.19 to 1.3.20 [Alexis Svinartchouk] </summary>
+> 
+>> ### mountutils-1.3.20
+>> #### (2020-11-30)
+>> 
+>> * Add versionbot changelog [Alexis Svinartchouk]
+>> 
+> </details>
+> 
+> 
+> <details>
+> <summary> Update gzip-stream from 1.1.1 to 1.1.2 [Alexis Svinartchouk] </summary>
+> 
+>> ### gzip-stream-1.1.2
+>> #### (2020-11-30)
+>> 
+>> * Add versionbot changelog [Alexis Svinartchouk]
+>> 
+> </details>
+> 
+> 
+> <details>
+> <summary> Update drivelist from 9.2.1 to 9.2.2 [Alexis Svinartchouk] </summary>
+> 
+>> ### drivelist-9.2.2
+>> #### (2020-11-30)
+>> 
+>> * Update typescript to v4.1.2 [Alexis Svinartchouk]
+>> * Add versionbot changelog [Alexis Svinartchouk]
+>> 
+> </details>
+> 
+> 
+> <details>
+> <summary> Update blockmap from 4.0.2 to 4.0.3 [Alexis Svinartchouk] </summary>
+> 
+>> ### blockmap-4.0.3
+>> #### (2020-11-30)
+>> 
+>> * Update typescript to v4.1.2 [Alexis Svinartchouk]
+>> * Add versionbot changelog [Alexis Svinartchouk]
+>> 
+> </details>
+> 
+> 
+> <details>
+> <summary> Update partitioninfo from 6.0.1 to 6.0.2 [Alexis Svinartchouk] </summary>
+> 
+>> ### partitioninfo-6.0.2
+>> #### (2020-11-27)
+>> 
+>> 
+>> <details>
+>> <summary> Update file-disk from 8.0.0 to 8.0.1 [Alexis Svinartchouk] </summary>
+>> 
+>>> #### file-disk-8.0.1
+>>> ##### (2020-11-26)
+>>> 
+>>> * Add versionbot changelog [Alexis Svinartchouk]
+>>> 
+>> </details>
+>> 
+>> * Add versionbot changelog [Alexis Svinartchouk]
+>> 
+> </details>
+> 
+> 
+> <details>
+> <summary> Update file-disk from 8.0.0 to 8.0.1 [Alexis Svinartchouk] </summary>
+> 
+>> ### file-disk-8.0.1
+>> #### (2020-11-26)
+>> 
+>> * Add versionbot changelog [Alexis Svinartchouk]
+>> 
+>> ### file-disk-8.0.1
+>> #### (2020-11-26)
+>> 
+>> * Add versionbot changelog [Alexis Svinartchouk]
+>> 
+> </details>
+> 
+> 
+> <details>
+> <summary> Update balena-image-fs from 7.0.4 to 7.0.5 [Alexis Svinartchouk] </summary>
+> 
+>> ### balena-image-fs-7.0.5
+>> #### (2020-11-27)
+>> 
+>> 
+>> <details>
+>> <summary> Update file-disk from 8.0.0 to 8.0.1 [Alexis Svinartchouk] </summary>
+>> 
+>>> #### file-disk-8.0.1
+>>> ##### (2020-11-26)
+>>> 
+>>> * Add versionbot changelog [Alexis Svinartchouk]
+>>> 
+>> </details>
+>> 
+>> 
+>> <details>
+>> <summary> Update ext2fs from 3.0.3 to 3.0.4 [Alexis Svinartchouk] </summary>
+>> 
+>>> #### node-ext2fs-3.0.4
+>>> ##### (2020-11-26)
+>>> 
+>>> * Add versionbot changelog [Alexis Svinartchouk]
+>>> 
+>> </details>
+>> 
+>> 
+>> <details>
+>> <summary> Update partitioninfo from 6.0.1 to 6.0.2 [Alexis Svinartchouk] </summary>
+>> 
+>>> #### partitioninfo-6.0.2
+>>> ##### (2020-11-27)
+>>> 
+>>> 
+>>> <details>
+>>> <summary> Update file-disk from 8.0.0 to 8.0.1 [Alexis Svinartchouk] </summary>
+>>> 
+>>>> ##### file-disk-8.0.1
+>>>> ###### (2020-11-26)
+>>>> 
+>>>> * Add versionbot changelog [Alexis Svinartchouk]
+>>>> 
+>>> </details>
+>>> 
+>>> * Add versionbot changelog [Alexis Svinartchouk]
+>>> 
+>> </details>
+>> 
+>> * Add versionbot changelog [Alexis Svinartchouk]
+>> 
+> </details>
+> 
+> 
+> ## etcher-sdk-5.1.8
+> ### (2020-11-26)
+> 
+> * Add versionbot changelog [Alexis Svinartchouk]
+> 
+> ## etcher-sdk-5.1.7
+> ### (2020-11-25)
+> 
+> * Don't start opening drives in advance to avoid unhandled rejections [Alexis Svinartchouk]
+> * Update generated docs [Alexis Svinartchouk]
+> 
+> ## etcher-sdk-5.1.6
+> ### (2020-11-24)
+> 
+> * Do not unmount source drives [Alexis Svinartchouk]
+> * Factorize retrying transient errors [Alexis Svinartchouk]
+> * Retry opening files & block devices on transient errors [Alexis Svinartchouk]
+> * Update generated docs [Alexis Svinartchouk]
+> 
+</details>
+
+* Set useContentSize to true so the size is the same on all platforms [Alexis Svinartchouk]
+
+# v1.5.111
+## (2020-11-23)
+
+* Warn when the source drive has no partition table [Alexis Svinartchouk]
+* Use a different icon when no source drive is available [Alexis Svinartchouk]
+* Allow selecting a locked SD card as the source drive [Alexis Svinartchouk]
+* Remove "Validate write on success" setting. Validation is always enabled, press the "skip" button to skip it. [Alexis Svinartchouk]
+* Update electron to v9.3.3 [Alexis Svinartchouk]
+* Update etcher-sdk to 5.1.1, use WASM ext2fs module [Alexis Svinartchouk]
+
+# v1.5.110
+## (2020-11-04)
+
+* Remove console.log in tests [Lorenzo Alberto Maria Ambrosi]
+* Fix URL not being selected with custom protocol [Lorenzo Alberto Maria Ambrosi]
+* Add skip function to validation [Lorenzo Alberto Maria Ambrosi]
+* Rework success screen [Lorenzo Alberto Maria Ambrosi]
+
+# v1.5.109
+## (2020-09-14)
+
+* Workaround elevation bug on Windows when the username contains an ampersand [Alexis Svinartchouk]
+
+# v1.5.108
+## (2020-09-10)
+
+* Fix content not loading when the app path contains special characters [Alexis Svinartchouk]
+
+# v1.5.107
+## (2020-09-04)
+
+* Re-enable ext partitions trimming on 32 bit Windows [Alexis Svinartchouk]
+* Rework system & large drives handling logic [Lorenzo Alberto Maria Ambrosi]
+* Reword macOS Catalina askpass message [Lorenzo Alberto Maria Ambrosi]
+* Add clone-drive workflow [Lorenzo Alberto Maria Ambrosi]
+
+# v1.5.106
+## (2020-08-27)
+
+* Disable ext partitions trimming on 32 bit windows until it is fixed [Alexis Svinartchouk]
+* Fix opening zip files from servers accepting Range headers [Alexis Svinartchouk]
+
+# v1.5.105
+## (2020-08-25)
+
+* Update etcher-sdk to 4.1.26 [Alexis Svinartchouk]
+* URL selector cancel button cancels ongoing url selection [Alexis Svinartchouk]
+* Spinner for URL selector modal [Alexis Svinartchouk]
+
+# v1.5.104
+## (2020-08-20)
+
+* Fix writing config file [Alexis Svinartchouk]
+* Update electron to v9.2.1 [Alexis Svinartchouk]
+
 # v1.5.103
 ## (2020-08-18)
 

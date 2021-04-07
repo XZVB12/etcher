@@ -3,17 +3,11 @@
 # ---------------------------------------------------------------------
 
 RESIN_SCRIPTS ?= ./scripts/resin
-export NPM_VERSION ?= 6.14.5
+export NPM_VERSION ?= 6.14.8
 S3_BUCKET = artifacts.ci.balena-cloud.com
 
 # This directory will be completely deleted by the `clean` rule
 BUILD_DIRECTORY ?= dist
-
-# See http://stackoverflow.com/a/20763842/1641422
-BUILD_DIRECTORY_PARENT = $(dir $(BUILD_DIRECTORY))
-ifeq ($(wildcard $(BUILD_DIRECTORY_PARENT).),)
-$(error $(BUILD_DIRECTORY_PARENT) does not exist)
-endif
 
 BUILD_TEMPORARY_DIRECTORY = $(BUILD_DIRECTORY)/.tmp
 
@@ -91,7 +85,7 @@ TARGET_ARCH ?= $(HOST_ARCH)
 # ---------------------------------------------------------------------
 # Electron
 # ---------------------------------------------------------------------
-electron-develop: | $(BUILD_TEMPORARY_DIRECTORY)
+electron-develop:
 	$(RESIN_SCRIPTS)/electron/install.sh \
 		-b $(shell pwd) \
 		-r $(TARGET_ARCH) \

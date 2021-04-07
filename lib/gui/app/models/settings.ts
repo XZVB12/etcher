@@ -26,6 +26,9 @@ const debug = _debug('etcher:models:settings');
 
 const JSON_INDENT = 2;
 
+export const DEFAULT_WIDTH = 800;
+export const DEFAULT_HEIGHT = 480;
+
 /**
  * @summary Userdata directory path
  * @description
@@ -35,12 +38,12 @@ const JSON_INDENT = 2;
  * - `~/Library/Application Support/etcher` on macOS
  * See https://electronjs.org/docs/api/app#appgetpathname
  *
- * NOTE: The ternary is due to this module being loaded both,
- * Electron's main process and renderer process
+ * NOTE: We use the remote property when this module
+ * is loaded in the Electron's renderer process
  */
-const USER_DATA_DIR = electron.app
-	? electron.app.getPath('userData')
-	: electron.remote.app.getPath('userData');
+const app = electron.app || electron.remote.app;
+
+const USER_DATA_DIR = app.getPath('userData');
 
 const CONFIG_PATH = join(USER_DATA_DIR, 'config.json');
 
@@ -74,9 +77,7 @@ export async function writeConfigFile(
 
 const DEFAULT_SETTINGS: _.Dictionary<any> = {
 	errorReporting: true,
-	unmountOnSuccess: true,
-	validateWriteOnSuccess: true,
-	updatesEnabled: !_.includes(['rpm', 'deb'], packageJSON.packageType),
+	updatesEnabled: ['appimage', 'nsis', 'dmg'].includes(packageJSON.packageType),
 	desktopNotifications: true,
 	autoBlockmapping: true,
 	decompressFirst: true,
@@ -92,14 +93,17 @@ async function load(): Promise<void> {
 
 const loaded = load();
 
-export async function set(key: string, value: any): Promise<void> {
+export async function set(
+	key: string,
+	value: any,
+	writeConfigFileFn = writeConfigFile,
+): Promise<void> {
 	debug('set', key, value);
 	await loaded;
 	const previousValue = settings[key];
 	settings[key] = value;
 	try {
-		// Use exports.writeConfigFile() so it can be mocked in tests
-		await exports.writeConfigFile(CONFIG_PATH, settings);
+		await writeConfigFileFn(CONFIG_PATH, settings);
 	} catch (error) {
 		// Revert to previous value if persisting settings failed
 		settings[key] = previousValue;

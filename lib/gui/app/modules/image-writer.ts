@@ -15,9 +15,8 @@
  */
 
 import { Drive as DrivelistDrive } from 'drivelist';
-import * as electron from 'electron';
 import * as sdk from 'etcher-sdk';
-import * as _ from 'lodash';
+import { Dictionary } from 'lodash';
 import * as ipc from 'node-ipc';
 import * as os from 'os';
 import * as path from 'path';
@@ -25,7 +24,8 @@ import * as path from 'path';
 import * as packageJSON from '../../../../package.json';
 import * as errors from '../../../shared/errors';
 import * as permissions from '../../../shared/permissions';
-import { SourceOptions } from '../components/source-selector/source-selector';
+import { getAppPath } from '../../../shared/utils';
+import { SourceMetadata } from '../components/source-selector/source-selector';
 import * as flashState from '../models/flash-state';
 import * as selectionState from '../models/selection-state';
 import * as settings from '../models/settings';
@@ -93,11 +93,7 @@ function terminateServer() {
 }
 
 function writerArgv(): string[] {
-	let entryPoint = path.join(
-		electron.remote.app.getAppPath(),
-		'generated',
-		'child-writer.js',
-	);
+	let entryPoint = path.join(getAppPath(), 'generated', 'child-writer.js');
 	// AppImages run over FUSE, so the files inside the mount point
 	// can only be accessed by the user that mounted the AppImage.
 	// This means we can't re-spawn Etcher as root from the same
@@ -131,26 +127,27 @@ function writerEnv() {
 }
 
 interface FlashResults {
+	skip?: boolean;
 	cancelled?: boolean;
+	results?: {
+		bytesWritten: number;
+		devices: {
+			failed: number;
+			successful: number;
+		};
+		errors: Error[];
+	};
 }
 
-/**
- * @summary Perform write operation
- */
 async function performWrite(
-	image: string,
+	image: SourceMetadata,
 	drives: DrivelistDrive[],
 	onProgress: sdk.multiWrite.OnProgressFunction,
-	source: SourceOptions,
-): Promise<FlashResults> {
+): Promise<{ cancelled?: boolean }> {
 	let cancelled = false;
+	let skip = false;
 	ipc.serve();
-	const {
-		unmountOnSuccess,
-		validateWriteOnSuccess,
-		autoBlockmapping,
-		decompressFirst,
-	} = await settings.getAll();
+	const { autoBlockmapping, decompressFirst } = await settings.getAll();
 	return await new Promise((resolve, reject) => {
 		ipc.server.on('error', (error) => {
 			terminateServer();
@@ -169,22 +166,22 @@ async function performWrite(
 			driveCount: drives.length,
 			uuid: flashState.getFlashUuid(),
 			flashInstanceUuid: flashState.getFlashUuid(),
-			unmountOnSuccess,
-			validateWriteOnSuccess,
 		};
 
 		ipc.server.on('fail', ({ device, error }) => {
 			if (device.devicePath) {
-				flashState.addFailedDevicePath(device.devicePath);
+				flashState.addFailedDeviceError({ device, error });
 			}
 			handleErrorLogging(error, analyticsData);
 		});
 
 		ipc.server.on('done', (event) => {
-			event.results.errors = _.map(event.results.errors, (data) => {
-				return errors.fromJSON(data);
-			});
-			_.merge(flashResults, event);
+			event.results.errors = event.results.errors.map(
+				(data: Dictionary<any> & { message: string }) => {
+					return errors.fromJSON(data);
+				},
+			);
+			flashResults.results = event.results;
 		});
 
 		ipc.server.on('abort', () => {
@@ -192,17 +189,19 @@ async function performWrite(
 			cancelled = true;
 		});
 
+		ipc.server.on('skip', () => {
+			terminateServer();
+			skip = true;
+		});
+
 		ipc.server.on('state', onProgress);
 
 		ipc.server.on('ready', (_data, socket) => {
 			ipc.server.emit(socket, 'write', {
-				imagePath: image,
+				image,
 				destinations: drives,
-				source,
-				SourceType: source.SourceType.name,
-				validateWriteOnSuccess,
+				SourceType: image.SourceType.name,
 				autoBlockmapping,
-				unmountOnSuccess,
 				decompressFirst,
 			});
 		});
@@ -210,7 +209,7 @@ async function performWrite(
 		const argv = writerArgv();
 
 		ipc.server.on('start', async () => {
-			console.log(`Elevating command: ${_.join(argv, ' ')}`);
+			console.log(`Elevating command: ${argv.join(' ')}`);
 			const env = writerEnv();
 			try {
 				const results = await permissions.elevateCommand(argv, {
@@ -218,6 +217,7 @@ async function performWrite(
 					environment: env,
 				});
 				flashResults.cancelled = cancelled || results.cancelled;
+				flashResults.skip = skip;
 			} catch (error) {
 				// This happens when the child is killed using SIGKILL
 				const SIGKILL_EXIT_CODE = 137;
@@ -231,10 +231,11 @@ async function performWrite(
 			}
 			console.log('Flash results', flashResults);
 
-			// This likely means the child died halfway through
+			// The flash wasn't cancelled and we didn't get a 'done' event
 			if (
 				!flashResults.cancelled &&
-				!_.get(flashResults, ['results', 'bytesWritten'])
+				!flashResults.skip &&
+				flashResults.results === undefined
 			) {
 				reject(
 					errors.createUserError({
@@ -258,9 +259,8 @@ async function performWrite(
  * @summary Flash an image to drives
  */
 export async function flash(
-	image: string,
+	image: SourceMetadata,
 	drives: DrivelistDrive[],
-	source: SourceOptions,
 	// This function is a parameter so it can be mocked in tests
 	write = performWrite,
 ): Promise<void> {
@@ -268,7 +268,7 @@ export async function flash(
 		throw new Error('There is already a flash in progress');
 	}
 
-	flashState.setFlashingFlag();
+	await flashState.setFlashingFlag();
 	flashState.setDevicePaths(
 		drives.map((d) => d.devicePath).filter((p) => p != null) as string[],
 	);
@@ -280,25 +280,20 @@ export async function flash(
 		uuid: flashState.getFlashUuid(),
 		status: 'started',
 		flashInstanceUuid: flashState.getFlashUuid(),
-		unmountOnSuccess: await settings.get('unmountOnSuccess'),
-		validateWriteOnSuccess: await settings.get('validateWriteOnSuccess'),
 	};
 
 	analytics.logEvent('Flash', analyticsData);
 
 	try {
-		const result = await write(
-			image,
-			drives,
-			flashState.setProgressState,
-			source,
-		);
-		flashState.unsetFlashingFlag(result);
+		const result = await write(image, drives, flashState.setProgressState);
+		await flashState.unsetFlashingFlag(result);
 	} catch (error) {
-		flashState.unsetFlashingFlag({ cancelled: false, errorCode: error.code });
+		await flashState.unsetFlashingFlag({
+			cancelled: false,
+			errorCode: error.code,
+		});
 		windowProgress.clear();
-		let { results } = flashState.getFlashResults();
-		results = results || {};
+		const { results = {} } = flashState.getFlashResults();
 		const eventData = {
 			...analyticsData,
 			errors: results.errors,
@@ -317,7 +312,7 @@ export async function flash(
 		};
 		analytics.logEvent('Elevation cancelled', eventData);
 	} else {
-		const { results } = flashState.getFlashResults();
+		const { results = {} } = flashState.getFlashResults();
 		const eventData = {
 			...analyticsData,
 			errors: results.errors,
@@ -333,17 +328,16 @@ export async function flash(
 /**
  * @summary Cancel write operation
  */
-export async function cancel() {
+export async function cancel(type: string) {
+	const status = type.toLowerCase();
 	const drives = selectionState.getSelectedDevices();
 	const analyticsData = {
-		image: selectionState.getImagePath(),
+		image: selectionState.getImage()?.path,
 		drives,
 		driveCount: drives.length,
 		uuid: flashState.getFlashUuid(),
 		flashInstanceUuid: flashState.getFlashUuid(),
-		unmountOnSuccess: await settings.get('unmountOnSuccess'),
-		validateWriteOnSuccess: await settings.get('validateWriteOnSuccess'),
-		status: 'cancel',
+		status,
 	};
 	analytics.logEvent('Cancel', analyticsData);
 
@@ -353,7 +347,7 @@ export async function cancel() {
 		// @ts-ignore (no Server.sockets in @types/node-ipc)
 		const [socket] = ipc.server.sockets;
 		if (socket !== undefined) {
-			ipc.server.emit(socket, 'cancel');
+			ipc.server.emit(socket, status);
 		}
 	} catch (error) {
 		analytics.logException(error);

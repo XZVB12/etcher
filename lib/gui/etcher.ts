@@ -122,8 +122,8 @@ interface AutoUpdaterConfig {
 
 async function createMainWindow() {
 	const fullscreen = Boolean(await settings.get('fullscreen'));
-	const defaultWidth = 800;
-	const defaultHeight = 480;
+	const defaultWidth = settings.DEFAULT_WIDTH;
+	const defaultHeight = settings.DEFAULT_HEIGHT;
 	let width = defaultWidth;
 	let height = defaultHeight;
 	if (fullscreen) {
@@ -133,7 +133,7 @@ async function createMainWindow() {
 		width,
 		height,
 		frame: !fullscreen,
-		useContentSize: false,
+		useContentSize: true,
 		show: false,
 		resizable: false,
 		maximizable: false,
@@ -147,6 +147,7 @@ async function createMainWindow() {
 		webPreferences: {
 			backgroundThrottling: false,
 			nodeIntegration: true,
+			contextIsolation: false,
 			webviewTag: true,
 			zoomFactor: width / defaultWidth,
 			enableRemoteModule: true,
@@ -161,6 +162,9 @@ async function createMainWindow() {
 	// Prevent flash of white when starting the application
 	mainWindow.on('ready-to-show', () => {
 		console.timeEnd('ready-to-show');
+		// Electron sometimes caches the zoomFactor
+		// making it obnoxious to switch back-and-forth
+		mainWindow.webContents.setZoomFactor(width / defaultWidth);
 		mainWindow.show();
 	});
 
@@ -171,7 +175,13 @@ async function createMainWindow() {
 		event.preventDefault();
 	});
 
-	mainWindow.loadURL(`file://${path.join(__dirname, 'index.html')}`);
+	mainWindow.loadURL(
+		`file://${path.join(
+			'/',
+			...__dirname.split(path.sep).map(encodeURIComponent),
+			'index.html',
+		)}`,
+	);
 
 	const page = mainWindow.webContents;
 

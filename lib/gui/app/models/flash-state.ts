@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import * as electron from 'electron';
 import * as sdk from 'etcher-sdk';
 import * as _ from 'lodash';
 
@@ -45,6 +46,8 @@ export function isFlashing(): boolean {
  * start a flash process.
  */
 export function setFlashingFlag() {
+	// see https://github.com/balenablocks/balena-electron-env/blob/4fce9c461f294d4a768db8f247eea6f75d7b08b0/README.md#remote-methods
+	electron.ipcRenderer.send('disable-screensaver');
 	store.dispatch({
 		type: Actions.SET_FLASHING_FLAG,
 		data: {},
@@ -66,6 +69,8 @@ export function unsetFlashingFlag(results: {
 		type: Actions.UNSET_FLASHING_FLAG,
 		data: results,
 	});
+	// see https://github.com/balenablocks/balena-electron-env/blob/4fce9c461f294d4a768db8f247eea6f75d7b08b0/README.md#remote-methods
+	electron.ipcRenderer.send('enable-screensaver');
 }
 
 export function setDevicePaths(devicePaths: string[]) {
@@ -75,14 +80,29 @@ export function setDevicePaths(devicePaths: string[]) {
 	});
 }
 
-export function addFailedDevicePath(devicePath: string) {
-	const failedDevicePathsSet = new Set(
-		store.getState().toJS().failedDevicePaths,
+export function addFailedDeviceError({
+	device,
+	error,
+}: {
+	device: sdk.scanner.adapters.DrivelistDrive;
+	error: Error;
+}) {
+	const failedDeviceErrorsMap = new Map(
+		store.getState().toJS().failedDeviceErrors,
 	);
-	failedDevicePathsSet.add(devicePath);
+	if (failedDeviceErrorsMap.has(device.device)) {
+		// Only store the first error
+		return;
+	}
+	failedDeviceErrorsMap.set(device.device, {
+		description: device.description,
+		device: device.device,
+		devicePath: device.devicePath,
+		...error,
+	});
 	store.dispatch({
-		type: Actions.SET_FAILED_DEVICE_PATHS,
-		data: Array.from(failedDevicePathsSet),
+		type: Actions.SET_FAILED_DEVICE_ERRORS,
+		data: Array.from(failedDeviceErrorsMap),
 	});
 }
 

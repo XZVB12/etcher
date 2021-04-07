@@ -23,23 +23,22 @@ import { SVGIcon } from '../svg-icon/svg-icon';
 import { middleEllipsis } from '../../utils/middle-ellipsis';
 
 interface ReducedFlashingInfosProps {
-	imageLogo: string;
-	imageName: string;
+	imageLogo?: string;
+	imageName?: string;
 	imageSize: string;
 	driveTitle: string;
 	driveLabel: string;
 	style?: React.CSSProperties;
 }
 
-export class ReducedFlashingInfos extends React.Component<
-	ReducedFlashingInfosProps
-> {
+export class ReducedFlashingInfos extends React.Component<ReducedFlashingInfosProps> {
 	constructor(props: ReducedFlashingInfosProps) {
 		super(props);
 		this.state = {};
 	}
 
 	public render() {
+		const { imageName = '' } = this.props;
 		return (
 			<Flex
 				flexDirection="column"
@@ -56,9 +55,9 @@ export class ReducedFlashingInfos extends React.Component<
 					/>
 					<Txt
 						style={{ marginRight: '9px' }}
-						tooltip={{ text: this.props.imageName, placement: 'right' }}
+						tooltip={{ text: imageName, placement: 'right' }}
 					>
-						{middleEllipsis(this.props.imageName, 16)}
+						{middleEllipsis(imageName, 16)}
 					</Txt>
 					<Txt color="#7e8085">{this.props.imageSize}</Txt>
 				</Flex>

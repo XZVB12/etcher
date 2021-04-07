@@ -32,8 +32,7 @@ import { BannerPlugin, NormalModuleReplacementPlugin } from 'webpack';
  */
 function externalPackageJson(packageJsonPath: string) {
 	return (
-		_context: string,
-		request: string,
+		{ request }: { context: string; request: string },
 		callback: (error?: Error | null, result?: string) => void,
 	) => {
 		if (_.endsWith(request, 'package.json')) {
@@ -50,8 +49,7 @@ function platformSpecificModule(
 ) {
 	// Resolves module on platform, otherwise resolves the replacement
 	return (
-		_context: string,
-		request: string,
+		{ request }: { context: string; request: string },
 		callback: (error?: Error, result?: string, type?: string) => void,
 	) => {
 		if (request === module && os.platform() !== platform) {
@@ -70,6 +68,8 @@ function renameNodeModules(resourcePath: string) {
 		path
 			.relative(__dirname, resourcePath)
 			.replace('node_modules', 'modules')
+			// use the same name on all architectures so electron-builder can build a universal dmg on mac
+			.replace(LZMA_BINDINGS_FOLDER, LZMA_BINDINGS_FOLDER_RENAMED)
 			// file-loader expects posix paths, even on Windows
 			.replace(/\\/g, '/')
 	);
@@ -89,6 +89,7 @@ function findLzmaNativeBindingsFolder(): string {
 }
 
 const LZMA_BINDINGS_FOLDER = findLzmaNativeBindingsFolder();
+const LZMA_BINDINGS_FOLDER_RENAMED = 'binding';
 
 interface ReplacementRule {
 	search: string;
@@ -108,9 +109,35 @@ function replace(test: RegExp, ...replacements: ReplacementRule[]) {
 	};
 }
 
+function fetchWasm(...where: string[]) {
+	const whereStr = where.map((x) => `'${x}'`).join(', ');
+	return outdent`
+		const Path = require('path');
+		let electron;
+		try {
+			// This doesn't exist in the child-writer
+			electron = require('electron');
+		} catch {
+		}
+		function appPath() {
+			return Path.isAbsolute(__dirname) ? 
+				__dirname :
+				Path.join(
+					// With macOS universal builds, getAppPath() returns the path to an app.asar file containing an index.js file which will
+					// include the app-x64 or app-arm64 folder depending on the arch.
+					// We don't care about the app.asar file, we want the actual folder.
+					electron.remote.app.getAppPath().replace(/\\.asar$/, () => process.platform === 'darwin' ? '-' + process.arch : ''),
+					'generated'
+				);
+		}
+		scriptDirectory = Path.join(appPath(), 'modules', ${whereStr}, '/');
+	`;
+}
+
 const commonConfig = {
 	mode: 'production',
 	optimization: {
+		moduleIds: 'natural',
 		minimize: true,
 		minimizer: [
 			new TerserPlugin({
@@ -129,6 +156,10 @@ const commonConfig = {
 	},
 	module: {
 		rules: [
+			{
+				test: /\.css$/,
+				use: 'css-loader',
+			},
 			{
 				test: /\.svg$/,
 				use: '@svgr/webpack',
@@ -171,12 +202,7 @@ const commonConfig = {
 				// remove node-pre-gyp magic from lzma-native
 				{
 					search: 'require(binding_path)',
-					replace: () => {
-						return `require('./${path.posix.join(
-							LZMA_BINDINGS_FOLDER,
-							'lzma_native.node',
-						)}')`;
-					},
+					replace: `require('./${LZMA_BINDINGS_FOLDER}/lzma_native.node')`,
 				},
 				// use regular stream module instead of readable-stream
 				{
@@ -188,11 +214,6 @@ const commonConfig = {
 			replace(/node_modules\/@balena.io\/usb\/usb\.js$/, {
 				search: 'require(binding_path)',
 				replace: "require('./build/Release/usb_bindings.node')",
-			}),
-			// remove bindings magic from ext2fs
-			replace(/node_modules\/ext2fs\/lib\/(ext2fs|binding)\.js$/, {
-				search: "require('bindings')('bindings')",
-				replace: "require('../build/Release/bindings.node')",
 			}),
 			// remove bindings magic from mountutils
 			replace(/node_modules\/mountutils\/index\.js$/, {
@@ -225,8 +246,32 @@ const commonConfig = {
 					"return await readFile(Path.join(__dirname, '..', 'blobs', filename));",
 				replace: outdent`
 					const { app, remote } = require('electron');
-					return await readFile(Path.join((app || remote.app).getAppPath(), 'generated', __dirname.replace('node_modules', 'modules'), '..', 'blobs', filename));
+					return await readFile(
+						Path.join(
+							// With macOS universal builds, getAppPath() returns the path to an app.asar file containing an index.js file which will
+							// include the app-x64 or app-arm64 folder depending on the arch.
+							// We don't care about the app.asar file, we want the actual folder.
+							(app || remote.app).getAppPath().replace(/\\.asar$/, () => process.platform === 'darwin' ? '-' + process.arch : ''),
+							'generated',
+							__dirname.replace('node_modules', 'modules'),
+							'..',
+							'blobs',
+							filename
+						)
+					);
 				`,
+			}),
+			// Use the libext2fs.wasm file in the generated folder
+			// The way to find the app directory depends on whether we run in the renderer or in the child-writer
+			// We use __dirname in the child-writer and electron.remote.app.getAppPath() in the renderer
+			replace(/node_modules\/ext2fs\/lib\/libext2fs\.js$/, {
+				search: 'scriptDirectory=__dirname+"/"',
+				replace: fetchWasm('ext2fs', 'lib'),
+			}),
+			// Same for node-crc-utils
+			replace(/node_modules\/@balena\/node-crc-utils\/crc32\.js$/, {
+				search: 'scriptDirectory=__dirname+"/"',
+				replace: fetchWasm('@balena', 'node-crc-utils'),
 			}),
 			// Copy native modules to generated folder
 			{
@@ -248,7 +293,7 @@ const commonConfig = {
 			format: process.env.WEBPACK_PROGRESS || 'verbose',
 		}),
 		// Force axios to use http.js, not xhr.js as we need stream support
-		// (it's package.json file replaces http with xhr for browser targets).
+		// (its package.json file replaces http with xhr for browser targets).
 		new NormalModuleReplacementPlugin(
 			slashOrAntislash(/node_modules\/axios\/lib\/adapters\/xhr\.js/),
 			'./http.js',
@@ -277,13 +322,21 @@ const guiConfigCopyPatterns = [
 		from: 'node_modules/node-raspberrypi-usbboot/blobs',
 		to: 'modules/node-raspberrypi-usbboot/blobs',
 	},
+	{
+		from: 'node_modules/ext2fs/lib/libext2fs.wasm',
+		to: 'modules/ext2fs/lib/libext2fs.wasm',
+	},
+	{
+		from: 'node_modules/@balena/node-crc-utils/crc32.wasm',
+		to: 'modules/@balena/node-crc-utils/crc32.wasm',
+	},
 ];
 
 if (os.platform() === 'win32') {
 	// liblzma.dll is required on Windows for lzma-native
 	guiConfigCopyPatterns.push({
 		from: `node_modules/lzma-native/${LZMA_BINDINGS_FOLDER}/liblzma.dll`,
-		to: `modules/lzma-native/${LZMA_BINDINGS_FOLDER}/liblzma.dll`,
+		to: `modules/lzma-native/${LZMA_BINDINGS_FOLDER_RENAMED}/liblzma.dll`,
 	});
 }
 
@@ -370,6 +423,7 @@ const cssConfig = {
 		index: path.join(__dirname, 'lib', 'gui', 'app', 'css', 'main.css'),
 	},
 	output: {
+		publicPath: '',
 		path: path.join(__dirname, 'generated'),
 	},
 };

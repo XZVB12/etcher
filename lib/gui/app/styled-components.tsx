@@ -14,36 +14,26 @@
  * limitations under the License.
  */
 
+import * as _ from 'lodash';
 import * as React from 'react';
 import {
+	Alert as AlertBase,
 	Flex,
 	FlexProps,
 	Button,
 	ButtonProps,
 	Modal as ModalBase,
 	Provider,
+	Table as BaseTable,
+	TableProps as BaseTableProps,
 	Txt,
-	Theme as renditionTheme,
 } from 'rendition';
-import styled from 'styled-components';
-import { space } from 'styled-system';
+import styled, { css } from 'styled-components';
 
 import { colors, theme } from './theme';
 
-const defaultTheme = {
-	...renditionTheme,
-	...theme,
-	layer: {
-		extend: () => `
-			> div:first-child {
-				background-color: transparent;
-			}
-		`,
-	},
-};
-
 export const ThemedProvider = (props: any) => (
-	<Provider theme={defaultTheme} {...props}></Provider>
+	<Provider theme={theme} {...props}></Provider>
 );
 
 export const BaseButton = styled(Button)`
@@ -69,6 +59,7 @@ export const StepButton = styled((props: ButtonProps) => (
 	<BaseButton {...props}></BaseButton>
 ))`
 	color: #ffffff;
+	font-size: 14px;
 `;
 
 export const ChangeButton = styled(Button)`
@@ -86,7 +77,6 @@ export const ChangeButton = styled(Button)`
 				color: #8f9297;
 			}
 		}
-		${space}
 	}
 `;
 
@@ -95,7 +85,7 @@ export const StepNameButton = styled(BaseButton)`
 	justify-content: center;
 	align-items: center;
 	width: 100%;
-	font-weight: bold;
+	font-weight: normal;
 	color: ${colors.dark.foreground};
 
 	&:enabled {
@@ -121,65 +111,81 @@ export const DetailsText = (props: FlexProps) => (
 	/>
 );
 
-export const Modal = styled(({ style, ...props }) => {
-	return (
-		<Provider
-			theme={{
-				...defaultTheme,
-				header: {
-					height: '50px',
-				},
-				layer: {
-					extend: () => `
-					${defaultTheme.layer.extend()}
+const modalFooterShadowCss = css`
+	overflow: auto;
+	background: 0, linear-gradient(rgba(255, 255, 255, 0), white 70%) 0 100%, 0,
+		linear-gradient(rgba(255, 255, 255, 0), rgba(221, 225, 240, 0.5) 70%) 0 100%;
+	background-repeat: no-repeat;
+	background-size: 100% 40px, 100% 40px, 100% 8px, 100% 8px;
 
-					> div:last-child {
-						top: 0;
-					}
-				`,
+	background-repeat: no-repeat;
+	background-color: white;
+	background-size: 100% 40px, 100% 40px, 100% 8px, 100% 8px;
+	background-attachment: local, local, scroll, scroll;
+`;
+
+export const Modal = styled(({ style, children, ...props }) => {
+	return (
+		<ModalBase
+			position="top"
+			width="97vw"
+			cancelButtonProps={{
+				style: {
+					marginRight: '20px',
+					border: 'solid 1px #2a506f',
 				},
 			}}
+			style={{
+				height: '87.5vh',
+				...style,
+			}}
+			{...props}
 		>
-			<ModalBase
-				position="top"
-				width="96vw"
-				cancelButtonProps={{
-					style: {
-						marginRight: '20px',
-						border: 'solid 1px #2a506f',
-					},
-				}}
-				style={{
-					height: '86.5vh',
-					...style,
-				}}
-				{...props}
-			/>
-		</Provider>
+			<ScrollableFlex flexDirection="column" width="100%" height="90%">
+				{...children}
+			</ScrollableFlex>
+		</ModalBase>
 	);
 })`
 	> div {
-		padding: 24px 30px;
-		height: calc(100% - 80px);
+		padding: 0;
+		height: 99%;
 
-		::-webkit-scrollbar {
-			display: none;
+		> div:first-child {
+			height: 81%;
+			padding: 24px 30px 0;
 		}
 
 		> h3 {
 			margin: 0;
+			padding: 24px 30px 0;
+			height: 14.3%;
+		}
+
+		> div:first-child {
+			height: 81%;
+			padding: 24px 30px 0;
+		}
+
+		> div:nth-child(2) {
+			height: 61%;
+			padding: 0 30px;
+			${modalFooterShadowCss}
 		}
 
 		> div:last-child {
+			margin: 0;
+			flex-direction: ${(props) =>
+				props.reverseFooterButtons ? 'row-reverse' : 'row'};
 			border-radius: 0 0 7px 7px;
 			height: 80px;
 			background-color: #fff;
 			justify-content: center;
-			position: absolute;
-			bottom: 0;
-			left: 0;
 			width: 100%;
-			box-shadow: 0 -2px 10px 0 rgba(221, 225, 240, 0.5), 0 -1px 0 0 #dde1f0;
+		}
+
+		::-webkit-scrollbar {
+			display: none;
 		}
 	}
 `;
@@ -196,3 +202,124 @@ export const ScrollableFlex = styled(Flex)`
 		overflow-x: visible;
 	}
 `;
+
+export const Alert = styled((props) => (
+	<AlertBase warning emphasized {...props}></AlertBase>
+))`
+	position: fixed;
+	top: -40px;
+	left: 50%;
+	transform: translate(-50%, 0px);
+	height: 30px;
+	min-width: 50%;
+	padding: 0px;
+	justify-content: center;
+	align-items: center;
+	font-size: 14px;
+	background-color: #fca321;
+	text-align: center;
+
+	* {
+		color: #ffffff;
+	}
+
+	> div:first-child {
+		display: none;
+	}
+`;
+
+export interface GenericTableProps<T> extends BaseTableProps<T> {
+	refFn: (t: BaseTable<T>) => void;
+	data: T[];
+	checkedRowsNumber?: number;
+	multipleSelection: boolean;
+	showWarnings?: boolean;
+}
+
+const GenericTable: <T>(
+	props: GenericTableProps<T>,
+) => React.ReactElement<GenericTableProps<T>> = <T extends {}>({
+	refFn,
+	...props
+}: GenericTableProps<T>) => (
+	<div>
+		<BaseTable<T> ref={refFn} {...props} />
+	</div>
+);
+
+function StyledTable<T>() {
+	return styled((props: GenericTableProps<T>) => (
+		<GenericTable<T> {...props} />
+	))`
+		[data-display='table-head']
+			> [data-display='table-row']
+			> [data-display='table-cell'] {
+			position: sticky;
+			background-color: #f8f9fd;
+			top: 0;
+			z-index: 1;
+
+			input[type='checkbox'] + div {
+				display: ${(props) => (props.multipleSelection ? 'flex' : 'none')};
+
+				${(props) =>
+					props.multipleSelection &&
+					props.checkedRowsNumber !== 0 &&
+					props.checkedRowsNumber !== props.data.length
+						? `
+						font-weight: 600;
+						color: ${colors.primary.foreground};
+						background: ${colors.primary.background};
+
+						::after {
+							content: '–';
+						}
+						`
+						: ''}
+				}
+			}
+		}
+
+		[data-display='table-head'] > [data-display='table-row'],
+		[data-display='table-body'] > [data-display='table-row'] {
+			> [data-display='table-cell']:first-child {
+				padding-left: 15px;
+				width: 6%;
+			}
+
+			> [data-display='table-cell']:last-child {
+				padding-right: 0;
+			}
+		}
+
+		[data-display='table-body'] > [data-display='table-row'] {
+			&:nth-of-type(2n) {
+				background: transparent;
+			}
+
+			&[data-highlight='true'] {
+				&.system {
+					background-color: ${(props) => (props.showWarnings ? '#fff5e6' : '#e8f5fc')};
+				}
+
+				> [data-display='table-cell']:first-child {
+					box-shadow: none;
+				}
+			}
+		}
+
+		&& [data-display='table-row'] > [data-display='table-cell'] {
+			padding: 6px 8px;
+			color: #2a506f;
+		}
+
+		input[type='checkbox'] + div {
+			border-radius: ${(props) => (props.multipleSelection ? '4px' : '50%')};
+		}
+	`;
+}
+
+export const Table = <T extends {}>(props: GenericTableProps<T>) => {
+	const TypedStyledFunctional = StyledTable<T>();
+	return <TypedStyledFunctional {...props} />;
+};
